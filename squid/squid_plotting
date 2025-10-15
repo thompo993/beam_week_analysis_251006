@@ -96,7 +96,8 @@ class MPMS3Plotter:
     
     def plot(self, x_column, y_column, title=None, xlabel=None, ylabel=None, 
              figsize=(10, 6), marker='o', linestyle='-', color='red', 
-             markersize=4, grid=True, show_error=False, error_column=None):
+             markersize=4, grid=True, show_error=False, error_column=None,
+             mass_norm=False, mass_grams=None):
         """
         Create a plot of the data.
         
@@ -128,20 +129,42 @@ class MPMS3Plotter:
             Whether to show error bars
         error_column : str, optional
             Column name for error values
+        mass_norm : bool, optional
+            Whether to normalize by mass (default: False)
+        mass_grams : float, optional
+            Sample mass in grams for normalization
         """
         if self.data is None:
             raise ValueError("No data loaded. Call read_file() first.")
+        
+        # Validate mass normalization parameters
+        if mass_norm and mass_grams is None:
+            raise ValueError("mass_grams must be provided when mass_norm=True")
+        if mass_norm and mass_grams <= 0:
+            raise ValueError("mass_grams must be a positive number")
         
         # Create figure
         plt.figure(figsize=figsize)
         
         # Get data
         x = self.data[x_column]
-        y = self.data[y_column]
+        y = self.data[y_column].copy()
+        
+        # Apply mass normalization if requested
+        if mass_norm:
+            y = y / mass_grams
+            if ylabel is None:
+                # Modify default ylabel for mass normalization
+                if 'emu' in y_column.lower():
+                    ylabel = y_column.replace('emu', 'emu/g').replace('(emu)', '(emu/g)')
+                else:
+                    ylabel = f"{y_column} (normalized by mass)"
         
         # Plot with or without error bars
         if show_error and error_column:
-            yerr = self.data[error_column]
+            yerr = self.data[error_column].copy()
+            if mass_norm:
+                yerr = yerr / mass_grams
             plt.errorbar(x, y, yerr=yerr, marker=marker, linestyle=linestyle, 
                         color=color, markersize=markersize, capsize=3, 
                         markerfacecolor=color, markeredgecolor='black', 
@@ -154,7 +177,15 @@ class MPMS3Plotter:
         # Set labels and title
         plt.xlabel(xlabel if xlabel else x_column, fontsize=12)
         plt.ylabel(ylabel if ylabel else y_column, fontsize=12)
-        plt.title(title if title else f"{y_column} vs {x_column}", fontsize=14)
+        
+        # Modify title if mass normalized
+        if title:
+            plot_title = title
+        else:
+            plot_title = f"{y_column} vs {x_column}"
+            if mass_norm:
+                plot_title += f" (normalized by {mass_grams} g)"
+        plt.title(plot_title, fontsize=14)
         
         # Add grid
         if grid:
@@ -165,17 +196,28 @@ class MPMS3Plotter:
         
         return plt
     
-    def plot_moment_vs_field(self, show_error=True, **kwargs):
+    def plot_moment_vs_field(self, show_error=False, mass_norm=False, mass_grams=None, **kwargs):
         """
         Convenience method to plot Moment vs Magnetic Field (common plot).
+        
+        Parameters:
+        -----------
+        show_error : bool, optional
+            Whether to display error bars (default: False)
+        mass_norm : bool, optional
+            Whether to normalize by mass (default: False)
+        mass_grams : float, optional
+            Sample mass in grams for normalization
         """
         return self.plot(
             x_column='Magnetic Field (Oe)',
             y_column='Moment (emu)',
             error_column='M. Std. Err. (emu)' if show_error else None,
             show_error=show_error,
+            mass_norm=mass_norm,
+            mass_grams=mass_grams,
             xlabel='Magnetic Field (Oe)',
-            ylabel='Moment (emu)',
+            ylabel='Moment (emu/g)' if mass_norm else 'Moment (emu)',
             title='Magnetic Moment vs Field',
             **kwargs
         )
@@ -183,8 +225,8 @@ class MPMS3Plotter:
 
 # Example usage
 if __name__ == "__main__":
-    # Set your file path here
-    file_path = r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\alu_tape_3M_425_DWB-15102025.dat"  # <-- CHANGE THIS TO YOUR FILE PATH
+
+    file_path = r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\alu_tape_3M_425_DWB-15102025.dat"
     
     try:
         # Create plotter instance
@@ -200,14 +242,29 @@ if __name__ == "__main__":
         plotter.print_columns()
         
         # Create plot: Moment vs Magnetic Field
+        # Toggle show_error=True to display error bars
+        # Toggle mass_norm=True and set mass_grams to normalize by mass
         plotter.plot_moment_vs_field(
-            show_error=False,
+            show_error=False,      # <-- Set to True to show error bars
+            mass_norm=True,       # <-- Set to True to normalize by mass
+            mass_grams=0.01,       # <-- Set your sample mass in grams
             marker='o',
             color='red',
             markersize=4,
             figsize=(10, 6)
         )
         plt.show()
+        
+        # Example with mass normalization:
+        # plotter.plot_moment_vs_field(
+        #     show_error=True,
+        #     mass_norm=True,
+        #     mass_grams=0.0548,  # Example: 54.8 mg = 0.0548 g
+        #     marker='o',
+        #     color='blue',
+        #     markersize=4
+        # )
+        # plt.show()
         
         # You can also create custom plots
         # plotter.plot(
