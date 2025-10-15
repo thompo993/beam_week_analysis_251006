@@ -1,0 +1,225 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
+
+class MPMS3Plotter:
+    """
+    A class to read and plot MPMS3 .dat files from Quantum Design magnetometers.
+    """
+    
+    def __init__(self, file_path):
+        """
+        Initialize the plotter with a file path.
+        
+        Parameters:
+        -----------
+        file_path : str
+            Path to the MPMS3 .dat file
+        """
+        self.file_path = file_path
+        self.header_info = {}
+        self.column_names = []
+        self.data = None
+        
+    def read_file(self):
+        """
+        Read the MPMS3 .dat file, extracting header info and data.
+        """
+        with open(self.file_path, 'r') as f:
+            lines = f.readlines()
+        
+        # Find where [Data] section starts
+        data_start_idx = None
+        for i, line in enumerate(lines):
+            if line.strip() == '[Data]':
+                data_start_idx = i
+                break
+        
+        if data_start_idx is None:
+            raise ValueError("Could not find [Data] section in file")
+        
+        # Extract header information (before [Data])
+        for line in lines[:data_start_idx]:
+            if line.startswith('INFO,'):
+                parts = line.strip().split(',')
+                if len(parts) >= 3:
+                    key = parts[-1]
+                    value = ','.join(parts[1:-1])
+                    self.header_info[key] = value
+        
+        # Get column names (first line after [Data])
+        column_line = lines[data_start_idx + 1].strip()
+        self.column_names = [col.strip() for col in column_line.split(',')]
+        
+        # Read data (skip the header line after column names)
+        data_lines = lines[data_start_idx + 2:]
+        
+        # Parse data into DataFrame
+        data_rows = []
+        for line in data_lines:
+            if line.strip():  # Skip empty lines
+                values = line.strip().split(',')
+                data_rows.append(values)
+        
+        self.data = pd.DataFrame(data_rows, columns=self.column_names)
+        
+        # Convert numeric columns to float
+        for col in self.data.columns:
+            if col != 'Comment':  # Skip comment column
+                try:
+                    self.data[col] = pd.to_numeric(self.data[col], errors='coerce')
+                except:
+                    pass
+        
+        return self
+    
+    def print_header_info(self):
+        """
+        Print the header information extracted from the file.
+        """
+        print("=" * 60)
+        print("MPMS3 DATA FILE HEADER INFORMATION")
+        print("=" * 60)
+        for key, value in self.header_info.items():
+            print(f"{key}: {value}")
+        print("=" * 60)
+    
+    def print_columns(self):
+        """
+        Print available column names for plotting.
+        """
+        print("\nAvailable columns:")
+        print("-" * 60)
+        for i, col in enumerate(self.column_names, 1):
+            print(f"{i}. {col}")
+        print("-" * 60)
+    
+    def plot(self, x_column, y_column, title=None, xlabel=None, ylabel=None, 
+             figsize=(10, 6), marker='o', linestyle='-', color='red', 
+             markersize=4, grid=True, show_error=False, error_column=None):
+        """
+        Create a plot of the data.
+        
+        Parameters:
+        -----------
+        x_column : str
+            Name of the column to use for x-axis
+        y_column : str
+            Name of the column to use for y-axis
+        title : str, optional
+            Plot title
+        xlabel : str, optional
+            X-axis label (defaults to column name)
+        ylabel : str, optional
+            Y-axis label (defaults to column name)
+        figsize : tuple, optional
+            Figure size (width, height)
+        marker : str, optional
+            Marker style
+        linestyle : str, optional
+            Line style
+        color : str, optional
+            Color of the plot
+        markersize : int, optional
+            Size of markers
+        grid : bool, optional
+            Whether to show grid
+        show_error : bool, optional
+            Whether to show error bars
+        error_column : str, optional
+            Column name for error values
+        """
+        if self.data is None:
+            raise ValueError("No data loaded. Call read_file() first.")
+        
+        # Create figure
+        plt.figure(figsize=figsize)
+        
+        # Get data
+        x = self.data[x_column]
+        y = self.data[y_column]
+        
+        # Plot with or without error bars
+        if show_error and error_column:
+            yerr = self.data[error_column]
+            plt.errorbar(x, y, yerr=yerr, marker=marker, linestyle=linestyle, 
+                        color=color, markersize=markersize, capsize=3, 
+                        markerfacecolor=color, markeredgecolor='black', 
+                        markeredgewidth=0.5)
+        else:
+            plt.plot(x, y, marker=marker, linestyle=linestyle, color=color, 
+                    markersize=markersize, markerfacecolor=color, 
+                    markeredgecolor='black', markeredgewidth=0.5)
+        
+        # Set labels and title
+        plt.xlabel(xlabel if xlabel else x_column, fontsize=12)
+        plt.ylabel(ylabel if ylabel else y_column, fontsize=12)
+        plt.title(title if title else f"{y_column} vs {x_column}", fontsize=14)
+        
+        # Add grid
+        if grid:
+            plt.grid(True, alpha=0.3, linestyle='--')
+        
+        # Format plot
+        plt.tight_layout()
+        
+        return plt
+    
+    def plot_moment_vs_field(self, show_error=True, **kwargs):
+        """
+        Convenience method to plot Moment vs Magnetic Field (common plot).
+        """
+        return self.plot(
+            x_column='Magnetic Field (Oe)',
+            y_column='Moment (emu)',
+            error_column='M. Std. Err. (emu)' if show_error else None,
+            show_error=show_error,
+            xlabel='Magnetic Field (Oe)',
+            ylabel='Moment (emu)',
+            title='Magnetic Moment vs Field',
+            **kwargs
+        )
+
+
+# Example usage
+if __name__ == "__main__":
+    # Set your file path here
+    file_path = r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\alu_tape_3M_425_DWB-15102025.dat"  # <-- CHANGE THIS TO YOUR FILE PATH
+    
+    try:
+        # Create plotter instance
+        plotter = MPMS3Plotter(file_path)
+        
+        # Read the file
+        plotter.read_file()
+        
+        # Print header information
+        plotter.print_header_info()
+        
+        # Print available columns
+        plotter.print_columns()
+        
+        # Create plot: Moment vs Magnetic Field
+        plotter.plot_moment_vs_field(
+            show_error=False,
+            marker='o',
+            color='red',
+            markersize=4,
+            figsize=(10, 6)
+        )
+        plt.show()
+        
+        # You can also create custom plots
+        # plotter.plot(
+        #     x_column='Temperature (K)',
+        #     y_column='Moment (emu)',
+        #     marker='s',
+        #     color='blue'
+        # )
+        # plt.show()
+        
+    except FileNotFoundError:
+        print(f"Error: File '{file_path}' not found.")
+        print("Please update the 'file_path' variable with your actual file path.")
+    except Exception as e:
+        print(f"Error: {e}")
