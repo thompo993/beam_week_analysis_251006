@@ -326,33 +326,51 @@ if __name__ == "__main__":
     
     # Define your file paths and configurations
     file_configs = [
-        {
-            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\alu_tape_3M_425_DWB-15102025.dat",
-            'label': 'Aluminum Tape Sample',
-            'color': 'red',
-            'marker': 'o',
-            'mass_norm': True,
-            'mass_grams': 0.01,
-            'markersize': 4
-        },
-        # Add more files here:
         # {
-        #     'path': r"path\to\second\file.dat",
-        #     'label': 'Sample 2',
-        #     'color': 'blue',
+        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025.dat",
+        #     'label': 'Initial Square Aluminum Tape Sample',
+        #     'color': 'red',
+        #     'marker': 'o',
+        #     'mass_norm': True,
+        #     'mass_grams': 0.00645,
+        #     'markersize': 4
+        # },
+        # {
+        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped.dat",
+        #     'label':"Initial Square Shape Stepped Aluminum Tape Sample",
+        #     'color': 'red',
         #     'marker': 's',
         #     'mass_norm': True,
-        #     'mass_grams': 0.0548,
+        #     'mass_grams': 0.00645,
         #     'markersize': 4
         # },
+        {
+            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_A_ball_00001.dat",
+            'label':"Ball with Adhesive",
+            'color': 'yellow',
+            'marker': 's',
+            'mass_norm': True,
+            'mass_grams': 0.03204,
+            'markersize': 4
+        },
         # {
-        #     'path': r"path\to\third\file.dat",
-        #     'label': 'Sample 3',
-        #     'color': 'green',
-        #     'marker': '^',
-        #     'mass_norm': False,
+        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_FlatPlate_with_Adhesive.dat",
+        #     'label':"square shape with adhesive",
+        #     'color': 'red',
+        #     'marker': 's',
+        #     'mass_norm': True,
+        #     'mass_grams': 0.04136,
         #     'markersize': 4
         # },
+         {
+            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_NA_ball.dat",
+            'label':"Ball no Adhesive",
+            'color': 'purple',
+            'marker': 's',
+            'mass_norm': True,
+            'mass_grams': 0.04309,
+            'markersize': 4
+        },
     ]
     
     try:
