@@ -223,60 +223,199 @@ class MPMS3Plotter:
         )
 
 
-# Example usage
-if __name__ == "__main__":
-
-    file_path = r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\alu_tape_3M_425_DWB-15102025.dat"
+def plot_overlay(file_configs, x_column='Magnetic Field (Oe)', y_column='Moment (emu)',
+                 title='Overlay Plot', xlabel=None, ylabel=None, figsize=(10, 6),
+                 grid=True, show_error=False, error_column='M. Std. Err. (emu)'):
+    """
+    Create an overlay plot from multiple MPMS3 files.
     
-    try:
-        # Create plotter instance
-        plotter = MPMS3Plotter(file_path)
+    Parameters:
+    -----------
+    file_configs : list of dict
+        List of configuration dictionaries for each file. Each dict should contain:
+        - 'path': str (required) - Path to the file
+        - 'label': str (optional) - Label for the legend
+        - 'color': str (optional) - Line/marker color
+        - 'marker': str (optional) - Marker style
+        - 'mass_grams': float (optional) - Mass for normalization
+        - 'mass_norm': bool (optional) - Whether to normalize by mass
+    x_column : str
+        Column name for x-axis
+    y_column : str
+        Column name for y-axis
+    title : str
+        Plot title
+    xlabel : str, optional
+        X-axis label
+    ylabel : str, optional
+        Y-axis label
+    figsize : tuple
+        Figure size
+    grid : bool
+        Whether to show grid
+    show_error : bool
+        Whether to show error bars
+    error_column : str
+        Column name for error values
+    """
+    plt.figure(figsize=figsize)
+    
+    # Default colors if not specified
+    default_colors = ['red', 'blue', 'green', 'orange', 'purple', 'brown', 'pink', 'gray']
+    default_markers = ['o', 's', '^', 'D', 'v', '<', '>', 'p']
+    
+    for i, config in enumerate(file_configs):
+        # Extract configuration
+        file_path = config['path']
+        label = config.get('label', f"File {i+1}")
+        color = config.get('color', default_colors[i % len(default_colors)])
+        marker = config.get('marker', default_markers[i % len(default_markers)])
+        mass_norm = config.get('mass_norm', False)
+        mass_grams = config.get('mass_grams', None)
+        markersize = config.get('markersize', 4)
+        linestyle = config.get('linestyle', '-')
         
-        # Read the file
+        # Read file
+        plotter = MPMS3Plotter(file_path)
         plotter.read_file()
         
-        # Print header information
-        plotter.print_header_info()
+        # Get data
+        x = plotter.data[x_column]
+        y = plotter.data[y_column].copy()
         
-        # Print available columns
-        plotter.print_columns()
+        # Apply mass normalization if requested
+        if mass_norm:
+            if mass_grams is None:
+                raise ValueError(f"mass_grams must be provided for {label} when mass_norm=True")
+            y = y / mass_grams
         
-        # Create plot: Moment vs Magnetic Field
-        # Toggle show_error=True to display error bars
-        # Toggle mass_norm=True and set mass_grams to normalize by mass
-        plotter.plot_moment_vs_field(
-            show_error=False,      # <-- Set to True to show error bars
-            mass_norm=True,       # <-- Set to True to normalize by mass
-            mass_grams=0.01,       # <-- Set your sample mass in grams
-            marker='o',
-            color='red',
-            markersize=4,
-            figsize=(10, 6)
+        # Plot with or without error bars
+        if show_error and error_column:
+            yerr = plotter.data[error_column].copy()
+            if mass_norm:
+                yerr = yerr / mass_grams
+            plt.errorbar(x, y, yerr=yerr, marker=marker, linestyle=linestyle,
+                        color=color, markersize=markersize, capsize=3,
+                        markerfacecolor=color, markeredgecolor='black',
+                        markeredgewidth=0.5, label=label, alpha=0.7)
+        else:
+            plt.plot(x, y, marker=marker, linestyle=linestyle, color=color,
+                    markersize=markersize, markerfacecolor=color,
+                    markeredgecolor='black', markeredgewidth=0.5, label=label, alpha=0.7)
+    
+    # Set labels and title
+    plt.xlabel(xlabel if xlabel else x_column, fontsize=12)
+    plt.ylabel(ylabel if ylabel else y_column, fontsize=12)
+    plt.title(title, fontsize=14)
+    
+    # Add legend
+    plt.legend(fontsize=10, loc='best')
+    
+    # Add grid
+    if grid:
+        plt.grid(True, alpha=0.3, linestyle='--')
+    
+    # Format plot
+    plt.tight_layout()
+    
+    return plt
+
+
+# Example usage
+if __name__ == "__main__":
+    
+    # Define your file paths and configurations
+    file_configs = [
+        # {
+        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025.dat",
+        #     'label': 'Initial Square Aluminum Tape Sample',
+        #     'color': 'red',
+        #     'marker': 'o',
+        #     'mass_norm': True,
+        #     'mass_grams': 0.00645,
+        #     'markersize': 4
+        # },
+        # {
+        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped.dat",
+        #     'label':"Initial Square Shape Stepped Aluminum Tape Sample",
+        #     'color': 'red',
+        #     'marker': 's',
+        #     'mass_norm': True,
+        #     'mass_grams': 0.00645,
+        #     'markersize': 4
+        # },
+        {
+            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_A_ball_00001.dat",
+            'label':"Ball with Adhesive",
+            'color': 'yellow',
+            'marker': 's',
+            'mass_norm': True,
+            'mass_grams': 0.03204,
+            'markersize': 4
+        },
+        # {
+        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_FlatPlate_with_Adhesive.dat",
+        #     'label':"square shape with adhesive",
+        #     'color': 'red',
+        #     'marker': 's',
+        #     'mass_norm': True,
+        #     'mass_grams': 0.04136,
+        #     'markersize': 4
+        # },
+         {
+            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_NA_ball.dat",
+            'label':"Ball no Adhesive",
+            'color': 'purple',
+            'marker': 's',
+            'mass_norm': True,
+            'mass_grams': 0.04309,
+            'markersize': 4
+        },
+    ]
+    
+    try:
+        # Plot individual files
+        for i, config in enumerate(file_configs):
+            print(f"\n{'='*60}")
+            print(f"Processing File {i+1}: {config.get('label', 'Unnamed')}")
+            print(f"{'='*60}")
+            
+            plotter = MPMS3Plotter(config['path'])
+            plotter.read_file()
+            plotter.print_header_info()
+            
+            # Create individual plot
+            plotter.plot_moment_vs_field(
+                show_error=config.get('show_error', False),
+                mass_norm=config.get('mass_norm', False),
+                mass_grams=config.get('mass_grams', None),
+                marker=config.get('marker', 'o'),
+                color=config.get('color', 'red'),
+                markersize=config.get('markersize', 4)
+            )
+            plt.show()
+        
+        # Create overlay plot
+        print(f"\n{'='*60}")
+        print("Creating Overlay Plot")
+        print(f"{'='*60}")
+        
+        plot_overlay(
+            file_configs=file_configs,
+            x_column='Magnetic Field (Oe)',
+            y_column='Moment (emu)',
+            title='Magnetic Moment vs Field - Overlay',
+            xlabel='Magnetic Field (Oe)',
+            ylabel='Moment (emu/g)',  # Adjust based on whether you're normalizing
+            figsize=(10, 6),
+            show_error=False  # Set to True to show error bars on overlay
         )
         plt.show()
         
-        # Example with mass normalization:
-        # plotter.plot_moment_vs_field(
-        #     show_error=True,
-        #     mass_norm=True,
-        #     mass_grams=0.0548,  # Example: 54.8 mg = 0.0548 g
-        #     marker='o',
-        #     color='blue',
-        #     markersize=4
-        # )
-        # plt.show()
-        
-        # You can also create custom plots
-        # plotter.plot(
-        #     x_column='Temperature (K)',
-        #     y_column='Moment (emu)',
-        #     marker='s',
-        #     color='blue'
-        # )
-        # plt.show()
-        
-    except FileNotFoundError:
-        print(f"Error: File '{file_path}' not found.")
-        print("Please update the 'file_path' variable with your actual file path.")
+    except FileNotFoundError as e:
+        print(f"Error: File not found - {e}")
+        print("Please update the file paths in 'file_configs'.")
     except Exception as e:
         print(f"Error: {e}")
+        import traceback
+        traceback.print_exc()
