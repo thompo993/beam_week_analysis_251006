@@ -196,9 +196,9 @@ class MPMS3Plotter:
         
         return plt
     
-    def plot_moment_vs_field(self, show_error=False, mass_norm=False, mass_grams=None, **kwargs):
+    def plot_moment_vs_temp(self, show_error=False, mass_norm=False, mass_grams=None, **kwargs):
         """
-        Convenience method to plot Moment vs Magnetic Field (common plot).
+        Convenience method to plot Moment vs Temperature (common plot).
         
         Parameters:
         -----------
@@ -210,20 +210,20 @@ class MPMS3Plotter:
             Sample mass in grams for normalization
         """
         return self.plot(
-            x_column='Magnetic Field (Oe)',
+            x_column='Temperature (K)',
             y_column='Moment (emu)',
             error_column='M. Std. Err. (emu)' if show_error else None,
             show_error=show_error,
             mass_norm=mass_norm,
             mass_grams=mass_grams,
-            xlabel='Magnetic Field (Oe)',
+            xlabel='Temperature (K)',
             ylabel='Moment (emu/g)' if mass_norm else 'Moment (emu)',
-            title='Magnetic Moment vs Field',
+            title='Magnetic Moment vs Temperature',
             **kwargs
         )
 
 
-def plot_overlay(file_configs, x_column='Magnetic Field (Oe)', y_column='Moment (emu)',
+def plot_overlay(file_configs, x_column='Temperature (K)', y_column='Moment (emu)',
                  title='Overlay Plot', xlabel=None, ylabel=None, figsize=(10, 6),
                  grid=True, show_error=False, error_column='M. Std. Err. (emu)'):
     """
@@ -326,50 +326,23 @@ if __name__ == "__main__":
     
     # Define your file paths and configurations
     file_configs = [
-        # {
-        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025.dat",
-        #     'label': 'Initial Square Aluminum Tape Sample',
-        #     'color': 'red',
-        #     'marker': 'o',
-        #     'mass_norm': True,
-        #     'mass_grams': 0.00645,
-        #     'markersize': 4
-        # },
-        # {
-        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped.dat",
-        #     'label':"Initial Square Shape Stepped Aluminum Tape Sample",
-        #     'color': 'red',
-        #     'marker': 's',
-        #     'mass_norm': True,
-        #     'mass_grams': 0.00645,
-        #     'markersize': 4
-        # },
         {
-            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_A_ball_00001.dat",
-            'label':"Ball with Adhesive",
+            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025_FC_100G.dat",
+            'label': "alu_tape_3M_425_DWB-15102025_FC_100G.dat",
             'color': 'yellow',
             'marker': 's',
             'mass_norm': True,
-            'mass_grams': 0.03204,
-            'markersize': 4
+            'mass_grams': 0.04136,
+            'markersize': 0
         },
-        # {
-        #     'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_FlatPlate_with_Adhesive.dat",
-        #     'label':"square shape with adhesive",
-        #     'color': 'red',
-        #     'marker': 's',
-        #     'mass_norm': True,
-        #     'mass_grams': 0.04136,
-        #     'markersize': 4
-        # },
-         {
-            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025-2stepped_NA_ball.dat",
-            'label':"Ball no Adhesive",
+        {
+            'path': r"C:\Users\fzy12567\OneDrive - Science and Technology Facilities Council\Ben Thompson 2025-2026 Onedrive\SQUID\3M 425 DWB - Magnetic Properties Test 251015\data\alu_tape_3M_425_DWB-15102025_ZFC_100G.dat",
+            'label': "alu_tape_3M_425_DWB-15102025_ZFC_100G.dat",
             'color': 'purple',
             'marker': 's',
             'mass_norm': True,
-            'mass_grams': 0.04309,
-            'markersize': 4
+            'mass_grams': 0.04136,
+            'markersize': 0
         },
     ]
     
@@ -385,7 +358,7 @@ if __name__ == "__main__":
             plotter.print_header_info()
             
             # Create individual plot
-            plotter.plot_moment_vs_field(
+            plotter.plot_moment_vs_temp(
                 show_error=config.get('show_error', False),
                 mass_norm=config.get('mass_norm', False),
                 mass_grams=config.get('mass_grams', None),
@@ -402,10 +375,10 @@ if __name__ == "__main__":
         
         plot_overlay(
             file_configs=file_configs,
-            x_column='Magnetic Field (Oe)',
+            x_column='Temperature (K)',
             y_column='Moment (emu)',
-            title='Magnetic Moment vs Field - Overlay',
-            xlabel='Magnetic Field (Oe)',
+            title='Magnetic Moment vs Temperature - Overlay',
+            xlabel='Temperature (K)',
             ylabel='Moment (emu/g)',  # Adjust based on whether you're normalizing
             figsize=(10, 6),
             show_error=False  # Set to True to show error bars on overlay
