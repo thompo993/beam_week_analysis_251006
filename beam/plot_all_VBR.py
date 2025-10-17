@@ -3,8 +3,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from matplotlib.lines import Line2D
-from scipy.signal import savgol_filter
-from scipy.optimize import curve_fit
 
 FOLDER_PATH = r"data" #folderpath goes here, ideally nothing else in the folder
 
