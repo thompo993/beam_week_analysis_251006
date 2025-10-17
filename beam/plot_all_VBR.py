@@ -20,17 +20,17 @@ for file in os.listdir(FOLDER_PATH):
     file_path = os.path.join(FOLDER_PATH , file)
     df = np.loadtxt(file_path,delimiter=",")
     for i in range(int(len(df)/2)):
-        if df[1+2*i] > 30: #reject lines that were not fitted right
+        if df[1+2*i] > 30: #reject lines that were not fitted right. best course of action would be to find those and check why
             plt.plot(x, line(df[0+2*i], df[1+2*i],x), color = col[k], linewidth = 0.5 )
 
             vbr.append(df[1+2*i])
     k+=1
 
+#create legend and plot
 legend_elements = [Line2D([0], [0], color=col[0], lw=4, label=lab[0]),
                    Line2D([0], [0], color=col[1], lw=4, label=lab[1]),
                    Line2D([0], [0], color=col[2], lw=4, label=lab[2]),
                    Line2D([0], [0], color=col[3], lw=4, label=lab[3])]
-
 plt.title("Vbr")
 plt.xlim(0,None)
 plt.legend(handles=legend_elements)
@@ -39,6 +39,7 @@ plt.ylabel("V")
 plt.grid()
 plt.show()
 
+#same thing, just a more zoomed in version of the code
 k = 0
 labz = []
 xzoom = np.linspace(20,45)
@@ -65,6 +66,7 @@ plt.ylabel("V")
 plt.grid()
 plt.show()
 
+#plots histogram 
 plt.hist(vbr,15)
 plt.show()
 
