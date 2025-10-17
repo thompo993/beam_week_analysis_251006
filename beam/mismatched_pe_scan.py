@@ -5,7 +5,7 @@ import os
 from scipy.signal import savgol_filter
 from scipy.optimize import curve_fit
 
-FOLDER_PATH = r"20251011_130933" #folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH = r"folderpath" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
 description = "" #add what you want the title to say, 
@@ -13,7 +13,7 @@ if description != "":
     description = " - " + description
 
 xlim = [None, None]
-ylim = [None, 1000]
+ylim = [-10, 1000]
 size = [10,8]
 
 def plot_channels(num):
@@ -28,8 +28,9 @@ def plot_channels(num):
                 plt.plot(x, df, label = folder[-10:], linewidth = 0.5)
     plt.title("Channel %s"%num + description)
     plt.yscale(LOG)
+    if LOG == 'linear':    
+        plt.ylim(ylim)
     plt.xlim(xlim)
-    plt.ylim(ylim)
     leg = plt.legend()
 
     for legobj in leg.legend_handles:
@@ -37,7 +38,7 @@ def plot_channels(num):
     
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num))
+        plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num+LOG))
         plt.close()
     else: plt.show() 
 
