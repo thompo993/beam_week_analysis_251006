@@ -3,6 +3,9 @@
 *.jpg
 *.jpeg
 *.svg
-
-# Ignore plots folder
-/Figures/
+Ignore data files
+*.csv
+*.dat
+*.npy
+Ignore Jupyter notebooks
+*ipynb
