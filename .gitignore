@@ -9,3 +9,5 @@ Ignore data files
 *.npy
 Ignore Jupyter notebooks
 *ipynb
+Ignore virtual environments
+*venv
