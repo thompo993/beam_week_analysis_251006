@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 import os
 from scipy.optimize import curve_fit
 
-FOLDER_PATH_source = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here, ideally nothing else in the folder
-FOLDER_PATH_beam = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here, ideally nothing else in the folder
-FOLDER_PATH_save = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH_source = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here for source data 
+FOLDER_PATH_beam = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here for beam data
+FOLDER_PATH_save = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath where to save photos
 
-SAVE_PNG = True
-channel = [1,5] #choose channel you want to visualize, in a list 
+SAVE_PNG = False
+channel = [1] #choose channel you want to visualize, in a list 
 LOG = 'linear' #options: 'log', 'linear'
-VISUALISATION = "channel" #options: "PE", "channel", "all". choose both if you want to see multiple channels and all PEs in the same plot
+VISUALISATION = "all" #options: "PE", "channel", "all". choose both if you want to see multiple channels and all PEs in the same plot
 
 xlim = [None, None]
 ylim = [None, 1000]
