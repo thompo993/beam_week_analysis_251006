@@ -4,11 +4,14 @@ import matplotlib.pyplot as plt
 import os
 from scipy.optimize import curve_fit
 
-FOLDER_PATH = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH_source = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH_beam = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH_save = r"C:\Users\lisam\Desktop\uni\musr\scans\moduleB\20251010_124828_vertical_transversebeam"#folderpath goes here, ideally nothing else in the folder
+
 SAVE_PNG = True
 channel = [1,5] #choose channel you want to visualize, in a list 
 LOG = 'linear' #options: 'log', 'linear'
-VISUALISATION = "all" #options: "PE", "channel", "all". choose both if you want to see multiple channels and all PEs in the same plot
+VISUALISATION = "channel" #options: "PE", "channel", "all". choose both if you want to see multiple channels and all PEs in the same plot
 
 xlim = [None, None]
 ylim = [None, 1000]
@@ -16,6 +19,7 @@ size = [10,8]
 
 def plot_PE(fold):
     plt.figure(figsize=size)
+    
     for i in channel:
         for file in os.listdir(fold):
             if "%s.csv" %i in file:
@@ -30,19 +34,27 @@ def plot_PE(fold):
     plt.legend()
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,fold[-5:]))
+        plt.savefig(os.path.join(FOLDER_PATH_save,fold[-5:]))
     plt.show()
 
 def plot_channels(num):
     plt.figure(figsize=size)
-    for folder in os.walk(FOLDER_PATH):
+    for folder in os.walk(FOLDER_PATH_beam):
         folder = folder[0]
         for file in os.listdir(folder):
             if "%s.csv"%num in file:
                 file_path = os.path.join(folder, file)
                 df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
                 x = range(len(df))
-                plt.plot(x, df, label = folder[-5:])
+                plt.plot(x, df, label = folder[-5:] + "beam")
+    for folder in os.walk(FOLDER_PATH_source):
+        folder = folder[0]
+        for file in os.listdir(folder):
+            if "%s.csv"%num in file:
+                file_path = os.path.join(folder, file)
+                df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
+                x = range(len(df))
+                plt.plot(x, df, label = folder[-5:] + "Sr90")
     plt.title("CH_%s"%num)
     plt.yscale(LOG)
     plt.xlim(xlim)
@@ -50,12 +62,12 @@ def plot_channels(num):
     plt.legend()
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num))
+        plt.savefig(os.path.join(FOLDER_PATH_save,"CH_%s"%num))
     plt.show() 
 
 
 if VISUALISATION == "PE":
-    for folder in os.walk(FOLDER_PATH):
+    for folder in os.walk(FOLDER_PATH_source):
         folder = folder[0]
         if "PE" in folder:
             plot_PE(folder)
@@ -68,14 +80,22 @@ if VISUALISATION == "channel":
 if VISUALISATION == "all":
     plt.figure(figsize=size)
     for i in channel:
-        for folder in os.walk(FOLDER_PATH):
+        for folder in os.walk(FOLDER_PATH_beam):
             folder = folder[0]
             for file in os.listdir(folder):
                 if "%s.csv"%i in file:
                     file_path = os.path.join(folder, file)
                     df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
                     x = range(len(df))
-                    plt.plot(x, df, label = folder[-5:]+ " ch %s"%i)
+                    plt.plot(x, df, label = folder[-5:]+ " ch %s - beam"%i)
+        for folder in os.walk(FOLDER_PATH_source):
+            folder = folder[0]
+            for file in os.listdir(folder):
+                if "%s.csv"%i in file:
+                    file_path = os.path.join(folder, file)
+                    df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
+                    x = range(len(df))
+                    plt.plot(x, df, label = folder[-5:]+ " ch %s - Sr90"%i)
     plt.title("All PE on chosen channels")
     plt.yscale(LOG)
     plt.xlim(xlim)
@@ -83,6 +103,6 @@ if VISUALISATION == "all":
     plt.legend()
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,"all"))
+        plt.savefig(os.path.join(FOLDER_PATH_save,"all"))
     plt.show() 
 
