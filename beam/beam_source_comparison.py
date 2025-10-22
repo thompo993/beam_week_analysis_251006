@@ -32,6 +32,39 @@ def smooth_data(y, window=51, poly=3):
         window = len(y) - 1 if len(y) % 2 == 0 else len(y)
     return savgol_filter(y, window_length=window, polyorder=poly)
 
+def peak_finder(data):
+    y = smooth_data(data)
+    y = smooth_data(y)    
+    y = smooth_data(y)    
+    y = smooth_data(y)
+    peaks, _ = find_peaks(y, height = p_height)
+    pk = [i for i in peaks if i>threshold]
+
+    if len(pk) != 0:
+        plt.scatter(pk, data[pk], color ="k")
+
+    if len(pk)!=1:
+        print(len(pk))
+        print(file)
+    return pk
+
+def valley_finder(data, m_peak):
+    y = smooth_data(-data)
+    y = smooth_data(y)    
+    y = smooth_data(y)    
+    y = smooth_data(y)
+    valley, _ = find_peaks(y, height = -p_height)
+    vl = [i for i in valley if i>threshold and i<m_peak]
+
+    if len(vl) != 0:
+        plt.scatter(vl, data[vl], color ="r")
+
+    if len(vl)!=1:
+        print(len(vl))
+        print(file)
+    return vl
+
+        
 
 plt.figure(figsize=size)
 for file in os.listdir(FOLDER_PATH):
@@ -43,30 +76,22 @@ for file in os.listdir(FOLDER_PATH):
     x = range(len(df))
     norm = np.sum(df)
 
-    y = smooth_data(df/norm)
-    y = smooth_data(y)    
-    y = smooth_data(y)    
-    y = smooth_data(y)
-    peaks, _ = find_peaks(y, height = p_height)
-
-    pk = [i for i in peaks if i>threshold]
-
-
     plt.plot(x, df/norm, label = file, alpha = 0.5)
-    if len(pk) != 0:
-        plt.scatter(pk, df[pk]/norm, color ="k")
+    
+    peak = peak_finder(df/norm)
+    peak_coordinates = [peak,df[peak]/norm]   
+    val = valley_finder(df/norm, peak)
+    valley_coordinates = [val,df[val]/norm]
+    print(peak_coordinates)
+    print(valley_coordinates)
+   
 
-    if len(pk)!=1:
-        print(len(pk))
-        print(file)
-        
+    plt.title("CH %s" %channel)
+    plt.yscale(LOG)
+    plt.xlim(xlim)
+    plt.ylim(ylim)
+    plt.legend()
+    plt.grid()
 
-plt.title("CH %s" %channel)
-plt.yscale(LOG)
-plt.xlim(xlim)
-plt.ylim(ylim)
-plt.legend()
-plt.grid()
-
-plt.show() 
+    plt.show() 
 
