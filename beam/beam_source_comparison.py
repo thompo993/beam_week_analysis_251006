@@ -14,7 +14,7 @@ SAVE_PNG = False
 LOG = 'linear' #options: 'log', 'linear'
 channel = 1
 
-xlim = [None, 1000]
+xlim = [None, 1500]
 ylim = [0, None]
 size = [10,8]
 
@@ -22,6 +22,9 @@ size = [10,8]
 threshold = 230
 p_height = 0.88
 p_to_v_diff = 0.15
+
+
+hwhm_ave = 0.01 #averages +- 1% of half height 
 
 
 
@@ -44,9 +47,9 @@ def peak_finder(data):
         plt.scatter(pk, data[pk], color ="k")
 
     if len(pk)!=1:
-        print(len(pk))
+        print("Error: more than 1 peak found")
         print(file)
-    return pk
+    return int(pk[0])
 
 def valley_finder(data, m_peak, p_h):
     y = smooth_data(-data)
@@ -58,42 +61,76 @@ def valley_finder(data, m_peak, p_h):
 
 
     if len(vl)!=0:
-        if len(vl)!=1:
-            print(len(vl))
-            print(file)
+        if len(vl)>0:
             vl = int(np.average(vl))
         plt.scatter(vl, data[vl], color ="r")
-
     return vl
 
-        
+def HWHM_right(coordinates, data):
+    data=smooth_data(data)
+    x = []
+    y = []
+    half = coordinates[1]/2
+    for k in range(coordinates[0], len(data)):
+        if data[k] < half*(1+hwhm_ave) and data[k] > half*(1-hwhm_ave):
+            x.append(k)
+            y.append(data[k])
+    plt.scatter(np.average(x), np.average(y), color = 'g')
+    return np.average(x)-coordinates[0]
+    
+f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
+
 
 plt.figure(figsize=size)
 for file in os.listdir(FOLDER_PATH):
     file_path = os.path.join(FOLDER_PATH, file)
-    df = np.loadtxt(file_path, delimiter=",", dtype=float)
-    if df.ndim > 1: 
-        df = df[:,channel]
-        df.flatten()
-    x = range(len(df))
-    norm = np.sum(df)/1000
+    if "log" in file:
+        continue
+    else:
+        df = np.loadtxt(file_path, delimiter=",", dtype=float)
+        if df.ndim > 1: 
+            df = df[:,channel]
+            df.flatten()
+        x = range(len(df))
+        norm = np.sum(df)/1000
 
-    plt.plot(x, df/norm, label = file, alpha = 0.5)
+        
+        peak = peak_finder(df/norm)
+        peak_coordinates = [peak , df[peak]/norm]   
+        val = valley_finder(df/norm, peak,df[peak]/norm )
+        valley_coordinates = [val,df[val]/norm]
+        
+        hwhm = HWHM_right(peak_coordinates,df/norm)
+
+
+        if type(valley_coordinates[0]) is list:
+            peak_to_valley_distance = None
+            peak_to_valley_ratio = None
+        else:
+            peak_to_valley_distance = peak_coordinates[0]-valley_coordinates[0]
+            peak_to_valley_ratio = peak_coordinates[1]/valley_coordinates[1]
+
+        print(file)
+        print(hwhm)
+        print(peak_to_valley_distance)
+        print(peak_to_valley_ratio)
+        plt.plot(x, df/norm, label = file, alpha = 0.5, )
+
+
+        f.write("File name: " + file +"\n")
+        f.write("Right HWHM: %s lsb\n"%hwhm)
+        f.write("Peak to valley distance: %s lsb\n"%peak_to_valley_distance)
+        f.write("Peak to valley ratio: %s\n\n" %peak_to_valley_ratio)
     
-    peak = peak_finder(df/norm)
-    peak_coordinates = [peak,df[peak]/norm]   
-    val = valley_finder(df/norm, peak,df[peak]/norm )
-    valley_coordinates = [val,df[val]/norm]
-    print(peak_coordinates)
-    print(valley_coordinates)
-   
 
-    plt.title("CH %s" %channel)
-    plt.yscale(LOG)
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-    plt.legend()
-    plt.grid()
 
-    plt.show() 
+plt.title("CH %s" %channel)
+plt.yscale(LOG)
+plt.xlim(xlim)
+plt.ylim(ylim)
+plt.legend()
+plt.grid()
 
+plt.show() 
+
+f.close()
