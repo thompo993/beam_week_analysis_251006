@@ -14,18 +14,18 @@ SAVE_PNG = False
 LOG = 'linear' #options: 'log', 'linear'
 channel = 1
 
-xlim = [None, 3000]
+xlim = [None, 1000]
 ylim = [0, None]
 size = [10,8]
 
 #parameters for peak finding 
 threshold = 230
-p_height = 0.00088
+p_height = 0.88
+p_to_v_diff = 0.15
 
 
 
 def smooth_data(y, window=51, poly=3):
-    """Apply Savitzky-Golay smoothing filter"""
     if window % 2 == 0:
         window += 1
     if window > len(y):
@@ -48,20 +48,22 @@ def peak_finder(data):
         print(file)
     return pk
 
-def valley_finder(data, m_peak):
+def valley_finder(data, m_peak, p_h):
     y = smooth_data(-data)
     y = smooth_data(y)    
     y = smooth_data(y)    
     y = smooth_data(y)
-    valley, _ = find_peaks(y, height = -p_height)
+    valley, _ = find_peaks(y, height = float(-(p_h-p_to_v_diff)))
     vl = [i for i in valley if i>threshold and i<m_peak]
 
-    if len(vl) != 0:
+
+    if len(vl)!=0:
+        if len(vl)!=1:
+            print(len(vl))
+            print(file)
+            vl = int(np.average(vl))
         plt.scatter(vl, data[vl], color ="r")
 
-    if len(vl)!=1:
-        print(len(vl))
-        print(file)
     return vl
 
         
@@ -74,13 +76,13 @@ for file in os.listdir(FOLDER_PATH):
         df = df[:,channel]
         df.flatten()
     x = range(len(df))
-    norm = np.sum(df)
+    norm = np.sum(df)/1000
 
     plt.plot(x, df/norm, label = file, alpha = 0.5)
     
     peak = peak_finder(df/norm)
     peak_coordinates = [peak,df[peak]/norm]   
-    val = valley_finder(df/norm, peak)
+    val = valley_finder(df/norm, peak,df[peak]/norm )
     valley_coordinates = [val,df[val]/norm]
     print(peak_coordinates)
     print(valley_coordinates)

@@ -10,7 +10,7 @@ from scipy.signal import savgol_filter
 threshold = 230
 peak_pos = 500
 
-FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots\amplitude_ch1_vertical.csv"#folderpath goes here
+FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots\25pe_loc_compact_48deg_table.csv"#folderpath goes here
 
 
 SAVE_PNG = False
@@ -36,7 +36,7 @@ plt.figure(figsize=size)
 
 file_path = FOLDER_PATH
 df = np.loadtxt(file_path, delimiter=",", dtype=float)
-norm = np.sum(df)
+norm = np.sum(df)/1000
 df = -1*df
 if df.ndim > 1: 
     df = df[:,channel]
@@ -47,19 +47,20 @@ y = smooth_data(df/norm)
 y = smooth_data(y)    
 y = smooth_data(y)    
 y = smooth_data(y)
-peaks, _ = find_peaks(y, height = -0.00088)
+peaks, _ = find_peaks(y, height = -0.88)
 
 print(peaks)
 pk = [i for i in peaks if i<peak_pos and i >threshold ]
 print(pk)
+if len(pk)!=1:
+    pk= int(np.average(pk))
 
 
 
 plt.plot(x, df/norm)
 plt.plot(x,y)
-if len(pk) != 0:
-    plt.scatter(pk, df[pk]/norm, color ='r')
-    print(len(pk))
+
+plt.scatter(pk, df[pk]/norm, color ='r')
 
 plt.title("CH %s" %channel)
 plt.yscale(LOG)
