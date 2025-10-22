@@ -30,7 +30,7 @@ def plot_PE(fold):
     plt.legend()
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,fold[-5:]))
+        plt.savefig(os.path.join(FOLDER_PATH,fold[-5:]+LOG))
     plt.show()
 
 def plot_channels(num):
@@ -50,7 +50,7 @@ def plot_channels(num):
     plt.legend()
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num))
+        plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num+LOG))
     plt.show() 
 
 
