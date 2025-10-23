@@ -10,14 +10,14 @@ from scipy.signal import savgol_filter
 threshold = 230
 peak_pos = 500
 
-FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots\25pe_loc_compact_48deg_table.csv"#folderpath goes here
+FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots\amplitude_ch5_vertical.csv"#folderpath goes here
 
 
 SAVE_PNG = False
 LOG = 'linear' #options: 'log', 'linear'
-channel = 1
+channel = 5
 
-xlim = [100, 1000]
+xlim = [100, 1500]
 ylim = [None, None]
 size = [10,8]
 
@@ -37,7 +37,6 @@ plt.figure(figsize=size)
 file_path = FOLDER_PATH
 df = np.loadtxt(file_path, delimiter=",", dtype=float)
 norm = np.sum(df)/1000
-df = -1*df
 if df.ndim > 1: 
     df = df[:,channel]
     df.flatten()
@@ -47,13 +46,12 @@ y = smooth_data(df/norm)
 y = smooth_data(y)    
 y = smooth_data(y)    
 y = smooth_data(y)
-peaks, _ = find_peaks(y, height = -0.88)
+peaks, _ = find_peaks(y, height = 0.9)
 
 print(peaks)
-pk = [i for i in peaks if i<peak_pos and i >threshold ]
+pk = [i for i in peaks if i >threshold ]
 print(pk)
-if len(pk)!=1:
-    pk= int(np.average(pk))
+
 
 
 

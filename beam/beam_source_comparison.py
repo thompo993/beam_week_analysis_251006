@@ -9,18 +9,16 @@ from scipy.signal import savgol_filter
 
 FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots"#folderpath goes here
 
-
-SAVE_PNG = False
 LOG = 'linear' #options: 'log', 'linear'
-channel = 1
+channel = 5
 
-xlim = [None, 1500]
-ylim = [0, None]
+xlim = [0, 1500]
+ylim = [0, 4]
 size = [10,8]
 
 #parameters for peak finding 
-threshold = 230
-p_height = 0.88
+threshold = 250
+p_height = 0.75
 p_to_v_diff = 0.15
 
 
@@ -28,7 +26,7 @@ hwhm_ave = 0.01 #averages +- 1% of half height
 
 
 
-def smooth_data(y, window=51, poly=3):
+def smooth_data(y, window=70, poly=4):
     if window % 2 == 0:
         window += 1
     if window > len(y):
@@ -40,15 +38,19 @@ def peak_finder(data):
     y = smooth_data(y)    
     y = smooth_data(y)    
     y = smooth_data(y)
+    plt.plot(y)
     peaks, _ = find_peaks(y, height = p_height)
     pk = [i for i in peaks if i>threshold]
 
-    if len(pk) != 0:
-        plt.scatter(pk, data[pk], color ="k")
+   
 
     if len(pk)!=1:
         print("Error: more than 1 peak found")
         print(file)
+
+    if len(pk) != 0:
+        plt.scatter(pk, data[pk], color ="k")
+    else: pk = [0]
     return int(pk[0])
 
 def valley_finder(data, m_peak, p_h):
@@ -80,11 +82,17 @@ def HWHM_right(coordinates, data):
     
 f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
 
+f.write("Analysis parameters:\n")
+f.write("threshold: %s\n" %threshold)
+f.write("p_height: %s\n" %p_height)
+f.write("p_to_v_diff: %s\n" %p_to_v_diff)
+f.write("hwhm_ave: %s\n\n" %hwhm_ave)
+
 
 plt.figure(figsize=size)
 for file in os.listdir(FOLDER_PATH):
     file_path = os.path.join(FOLDER_PATH, file)
-    if "log" in file:
+    if "csv" not in file:
         continue
     else:
         df = np.loadtxt(file_path, delimiter=",", dtype=float)
@@ -130,7 +138,7 @@ plt.xlim(xlim)
 plt.ylim(ylim)
 plt.legend()
 plt.grid()
-
+plt.savefig(os.path.join(FOLDER_PATH,"plot"))
 plt.show() 
 
 f.close()
