@@ -10,7 +10,7 @@ from scipy.signal import savgol_filter
 threshold = 230
 peak_pos = 500
 
-FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots\A_hist_data_realistic.csv"#folderpath goes here
+FOLDER_PATH = r""#folderpath goes here
 
 
 SAVE_PNG = False
