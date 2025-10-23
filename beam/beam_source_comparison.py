@@ -8,9 +8,9 @@ from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 
 FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots"#folderpath goes here
-
 LOG = 'linear' #options: 'log', 'linear'
 channel = 5
+PE = 25
 
 xlim = [0, 1500]
 ylim = [0, 4]
@@ -104,6 +104,9 @@ def HWHM_right(coordinates, data):
     return np.average(x)-coordinates[0]
     
 f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
+
+f.write("CHANNEL %s\n"%channel)
+f.write("PE %s\n\n"%PE)
 
 f.write("Analysis parameters:\n")
 f.write("threshold: %s\n" %threshold)
