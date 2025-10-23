@@ -18,11 +18,15 @@ size = [10,8]
 
 #parameters for peak finding 
 threshold = 250
-p_height = 0.75
+p_height = 0.76
 p_to_v_diff = 0.15
-
-
 hwhm_ave = 0.01 #averages +- 1% of half height 
+ran = 250
+
+SHOW_GAUSS = True
+
+def gaussian(x, A, mu, sigma):
+    return A * np.exp(-(x - mu)**2 / (2 * sigma**2))
 
 
 
@@ -35,23 +39,29 @@ def smooth_data(y, window=70, poly=4):
 
 def peak_finder(data):
     y = smooth_data(data)
-    y = smooth_data(y)    
-    y = smooth_data(y)    
-    y = smooth_data(y)
     plt.plot(y)
     peaks, _ = find_peaks(y, height = p_height)
+    for i in range(len(peaks)):
+        if peaks[i]-peaks[i-1] > ran:
+            cut = i
+    peaks = peaks[i:]
     pk = [i for i in peaks if i>threshold]
+    x = np.arange(len(y))
 
+    peak_guess = np.average(pk)
+    min_range = int(peak_guess - ran)
+    if min_range < threshold:
+        min_range = threshold
+    max_range = int(peak_guess + ran)
+    y = y[min_range:max_range]  
+    x = x[min_range:max_range]
+    popt, _ = curve_fit(gaussian,x,y,p0 = [p_height, peak_guess,peak_guess])
    
+    if SHOW_GAUSS:
+        plt.plot(x, gaussian(x,*popt))
+    plt.scatter(popt[1], gaussian(popt[1],*popt), color = "r")
 
-    if len(pk)!=1:
-        print("Error: more than 1 peak found")
-        print(file)
-
-    if len(pk) != 0:
-        plt.scatter(pk, data[pk], color ="k")
-    else: pk = [0]
-    return int(pk[0])
+    return [popt[1], gaussian(popt[1],*popt)]
 
 def valley_finder(data, m_peak, p_h):
     y = smooth_data(-data)
@@ -73,7 +83,7 @@ def HWHM_right(coordinates, data):
     x = []
     y = []
     half = coordinates[1]/2
-    for k in range(coordinates[0], len(data)):
+    for k in range(int(coordinates[0]), len(data)):
         if data[k] < half*(1+hwhm_ave) and data[k] > half*(1-hwhm_ave):
             x.append(k)
             y.append(data[k])
@@ -103,9 +113,8 @@ for file in os.listdir(FOLDER_PATH):
         norm = np.sum(df)/1000
 
         
-        peak = peak_finder(df/norm)
-        peak_coordinates = [peak , df[peak]/norm]   
-        val = valley_finder(df/norm, peak,df[peak]/norm )
+        peak_coordinates = peak_finder(df/norm)  
+        val = valley_finder(df/norm, peak_coordinates[0],peak_coordinates[1])
         valley_coordinates = [val,df[val]/norm]
         
         hwhm = HWHM_right(peak_coordinates,df/norm)
