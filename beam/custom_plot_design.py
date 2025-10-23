@@ -1,7 +1,7 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 
-filepath = r"File Path Here"
+filepath = "file path here"
 
 # Read CSV and skip bad lines
 df = pd.read_csv(filepath, on_bad_lines='skip', delimiter=",")
@@ -18,29 +18,29 @@ y = df.iloc[:,0]             # second column (first data column)
 # Figure settings
 FIGURE_WIDTH = 10
 FIGURE_HEIGHT = 6
-DPI = 100
+DPI = 250
 
 # Axis limits
 Y_MIN = 0
-Y_MAX = 5000
+Y_MAX = 300
 X_MIN = 0
 X_MAX = 4096
 
 # Log scale settings
 X_LOG_SCALE = False  # Set to True for logarithmic x-axis
-Y_LOG_SCALE = True  # Set to True for logarithmic y-axis
+Y_LOG_SCALE = False  # Set to True for logarithmic y-axis
 
 # Labels and title
-X_LABEL = "LSB"
+X_LABEL = "Amplitude [LSB]"
 Y_LABEL = "Counts"
-TITLE = ""  
-LABEL_FONTSIZE = 12
+TITLE = "Pulse Height Spectra - PE=25"  
+LABEL_FONTSIZE = 14
 TITLE_FONTSIZE = 14
-TICK_FONTSIZE = 10
+TICK_FONTSIZE = 14
 
 # Plot line settings
 LINE_COLOR = 'blue'
-LINE_WIDTH = 1.5
+LINE_WIDTH = 1
 LINE_STYLE = '-'  # Options: '-', '--', '-.', ':'
 MARKER = None  # Options: 'o', 's', '^', 'x', '+', etc. or None
 MARKER_SIZE = 4
@@ -58,6 +58,14 @@ MINOR_GRID_ENABLED = False
 
 # Tight layout
 TIGHT_LAYOUT = True
+
+# Save figure settings
+SAVE_FIGURE = False  # Set to True to save the figure
+SAVE_PATH = "output_plot.png"  # Path where figure will be saved
+SAVE_DPI = 300  # DPI for saved figure (can be different from display DPI)
+SAVE_FORMAT = 'png'  # Options: 'png', 'pdf', 'svg', 'jpg', etc.
+SAVE_BBOX_INCHES = 'tight'  # Options: 'tight' or None
+SAVE_TRANSPARENT = False  # Set to True for transparent background
 
 # ============================================
 # CREATE PLOT
@@ -108,5 +116,14 @@ if GRID_ENABLED:
 # Apply tight layout
 if TIGHT_LAYOUT:
     plt.tight_layout()
+
+# Save figure if enabled
+if SAVE_FIGURE:
+    plt.savefig(SAVE_PATH, 
+                dpi=SAVE_DPI, 
+                format=SAVE_FORMAT,
+                bbox_inches=SAVE_BBOX_INCHES,
+                transparent=SAVE_TRANSPARENT)
+    print(f"Figure saved to: {SAVE_PATH}")
 
 plt.show()
