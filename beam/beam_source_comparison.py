@@ -17,11 +17,11 @@ ylim = [0, 4]
 size = [10,8]
 
 #parameters for peak finding 
-threshold = 250
-p_height = 0.76
-p_to_v_diff = 0.15
-hwhm_ave = 0.01 #averages +- 1% of half height 
-ran = 250
+threshold = 250         #lower limit in xfor peak finding
+p_height = 0.76         #lower limit in y for peak finding 
+p_to_v_diff = 0.15      #mimimum difference between peak and valley for valley finding
+hwhm_ave = 0.01         #percentage of max_height used to take a slice to calculate the HWHM
+ran = 250               #half-width of slice taken to fit gaussian peak
 
 SHOW_GAUSS = True
 
@@ -39,21 +39,26 @@ def smooth_data(y, window=70, poly=4):
 
 def peak_finder(data):
     y = smooth_data(data)
-    plt.plot(y)
+    x = np.arange(len(y))
+    if SHOW_GAUSS:
+        plt.plot(y)
+    #find guess for gaussian
     peaks, _ = find_peaks(y, height = p_height)
-    for i in range(len(peaks)):
+    for i in range(len(peaks)): #remove peaks that are too far apart
         if peaks[i]-peaks[i-1] > ran:
             cut = i
     peaks = peaks[i:]
     pk = [i for i in peaks if i>threshold]
-    x = np.arange(len(y))
+    if len(pk) == 0:
+        print("Impossible to find peaks. Change value of p_height")
 
+    #fit around the peaks that were found with a gaussian of high sigma
     peak_guess = np.average(pk)
     min_range = int(peak_guess - ran)
     if min_range < threshold:
         min_range = threshold
     max_range = int(peak_guess + ran)
-    y = y[min_range:max_range]  
+    y = y[min_range:max_range] #take only a slice of data for the gaussian fit  
     x = x[min_range:max_range]
     popt, _ = curve_fit(gaussian,x,y,p0 = [p_height, peak_guess,peak_guess])
    
@@ -97,6 +102,7 @@ f.write("threshold: %s\n" %threshold)
 f.write("p_height: %s\n" %p_height)
 f.write("p_to_v_diff: %s\n" %p_to_v_diff)
 f.write("hwhm_ave: %s\n\n" %hwhm_ave)
+f.write("ran: %s\n\n" %ran)
 
 
 plt.figure(figsize=size)
