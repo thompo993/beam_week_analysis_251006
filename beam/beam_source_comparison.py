@@ -7,23 +7,25 @@ import sys
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 
-FOLDER_PATH = r"C:\Users\xph93786\Desktop\first_plots"#folderpath goes here
+FOLDER_PATH = r"filepath"#folderpath goes here
 LOG = 'linear' #options: 'log', 'linear'
-channel = 5
+channel = 1
 PE = 25
 
 xlim = [0, 1500]
 ylim = [0, 4]
-size = [10,8]
+size = [12,10]
 
 #parameters for peak finding 
 threshold = 250         #lower limit in xfor peak finding
 p_height = 0.76         #lower limit in y for peak finding 
-p_to_v_diff = 0.15      #mimimum difference between peak and valley for valley finding
+p_to_v_diff = 0.10      #mimimum difference between peak and valley for valley finding
 hwhm_ave = 0.01         #percentage of max_height used to take a slice to calculate the HWHM
-ran = 400               #half-width of slice taken to fit gaussian peak
+ran = 200               #half-width of slice taken to fit gaussian peak
 
-SHOW_GAUSS = False
+SHOW_GAUSS = False       #show gaussian fit on plot 
+
+f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
 
 def gaussian(x, A, mu, sigma):
     return A * np.exp(-(x - mu)**2 / (2 * sigma**2))
@@ -42,13 +44,16 @@ def peak_finder(data):
         plt.plot(y)
     #find guess for gaussian
     peaks, _ = find_peaks(y, height = p_height)
+    cut = 0
     for i in range(len(peaks)): #remove peaks that are too far apart
         if peaks[i]-peaks[i-1] > ran:
             cut = i
-    peaks = peaks[i:]
+    peaks = peaks[cut:]
     pk = [i for i in peaks if i>threshold]
+    # peak_height_max = np.max(y[pk])
+    # pk = [i for i in peaks if y[i]>0.80*peak_height_max]
     if len(pk) == 0:
-        print("Impossible to find peaks. Change value of p_height")
+        print("Unable to find peaks. Change value of p_height")
 
     #fit around the peaks that were found with a gaussian of high sigma
     peak_guess = np.average(pk)
@@ -58,7 +63,7 @@ def peak_finder(data):
     max_range = int(peak_guess + ran)
     y = y[min_range:max_range] #take only a slice of data for the gaussian fit  
     x = x[min_range:max_range]
-    popt, _ = curve_fit(gaussian,x,y,p0 = [p_height, peak_guess,peak_guess])
+    popt, _ = curve_fit(gaussian,x,y,p0 = [p_height, peak_guess,peak_guess/2], maxfev = 10000000)
    
     if SHOW_GAUSS:
         plt.plot(x, gaussian(x,*popt))
@@ -80,14 +85,15 @@ def valley_finder(data, m_peak, p_h):
     y = y[min_range:max_range] #take only a slice of data for the gaussian fit  
     x = x[min_range:max_range]
     popt, _ = curve_fit(gaussian,x,y,p0 = [p_to_v_diff, valley_guess,valley_guess], maxfev =1000000)
-   
-    if SHOW_GAUSS:
-        plt.plot(x, -gaussian(x,*popt)+p_h)
+
     
     if popt[1]> m_peak:
         mu = 0
-    else:    mu = popt[1]
-    plt.scatter(mu, -gaussian(mu,*popt)+p_h, color = "r")
+    else:    
+        mu = popt[1]
+        plt.scatter(mu, -gaussian(mu,*popt)+p_h, color = "r")
+        if SHOW_GAUSS:
+            plt.plot(x, -gaussian(x,*popt)+p_h)
 
     return [mu, -gaussian(mu,*popt)+p_h]
 
@@ -103,7 +109,6 @@ def HWHM_right(coordinates, data):
     plt.scatter(np.average(x), np.average(y), color = 'g')
     return np.average(x)-coordinates[0]
     
-f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
 
 f.write("CHANNEL %s\n"%channel)
 f.write("PE %s\n\n"%PE)
@@ -140,10 +145,9 @@ for file in os.listdir(FOLDER_PATH):
         peak_to_valley_distance = peak_coordinates[0]-valley_coordinates[0]
         peak_to_valley_ratio = peak_coordinates[1]/valley_coordinates[1]
 
-        print(file)
-        print(hwhm)
-        print(peak_to_valley_distance)
-        print(peak_to_valley_ratio)
+        # print(file)
+        # print(peak_coordinates)
+        # print(valley_coordinates)
         plt.plot(x, df/norm, label = file, alpha = 0.5, )
 
 
@@ -160,7 +164,10 @@ plt.xlim(xlim)
 plt.ylim(ylim)
 plt.legend()
 plt.grid()
-plt.savefig(os.path.join(FOLDER_PATH,"plot"))
+if SHOW_GAUSS:
+    filename = "plot_gauss" 
+else: filename = "plot"
+plt.savefig(os.path.join(FOLDER_PATH,filename))
 plt.show() 
 
 f.close()
