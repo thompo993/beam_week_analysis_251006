@@ -11,3 +11,5 @@ Ignore Jupyter notebooks
 *ipynb
 Ignore virtual environments
 *venv
+Ignore paths
+personalpaths.py

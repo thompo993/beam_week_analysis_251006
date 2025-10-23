@@ -5,8 +5,8 @@ import os
 from scipy.optimize import curve_fit
 import sys
 
-FOLDER_PATH_source = r"\\isis\shares\Detectors\Lisa Malliolio 2025\run_scans_source\20251021_123132_mBB_ch1ch5split_leadingedge_20min"#folderpath goes here for source data 
-FOLDER_PATH_beam = r"\\isis\shares\Detectors\Lisa Malliolio 2025\run_scans_source\20251010_161411beam_modBB"#folderpath goes here for beam data
+FOLDER_PATH_source = r"pathhere"#folderpath goes here for source data 
+FOLDER_PATH_beam = r"pathhere"#folderpath goes here for beam data
 FOLDER_PATH_save = r""#folderpath where to save photos
 
 if not os.path.isdir(FOLDER_PATH_beam):

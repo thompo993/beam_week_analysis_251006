@@ -6,8 +6,9 @@ from scipy.optimize import curve_fit
 import sys
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
+import personalpaths
 
-FOLDER_PATH = r"filepath"#folderpath goes here
+FOLDER_PATH = personalpaths.FOLDER_PATH_BEAM_SOURCE_COMPARISON # if not using personalpaths file, use r"filepath"
 LOG = 'linear' #options: 'log', 'linear'
 channel = 1
 PE = 25

@@ -3,8 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 from matplotlib.lines import Line2D
+import personalpaths
 
-FOLDER_PATH = r"data" #folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH = personalpaths.VBR_PATH#r"data" #folderpath goes here, ideally nothing else in the folder
 
 def line(m,q,x):
     return m*x+q
