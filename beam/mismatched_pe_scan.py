@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import os
 from scipy.signal import savgol_filter
 from scipy.optimize import curve_fit
+import personalpaths
 
-FOLDER_PATH = r"folderpath" #folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH = personalpaths.MISMATCHED_PATH#r"folderpath" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
 description = "" #add what you want the title to say, if nothing leave a "" 

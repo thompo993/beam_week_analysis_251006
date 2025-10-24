@@ -4,8 +4,9 @@ import matplotlib.pyplot as plt
 import os
 from scipy.signal import savgol_filter
 from scipy.optimize import curve_fit
+import personalpaths
 
-FOLDER_PATH = r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
+FOLDER_PATH = personalpaths.SCAN_PATH#r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
 VISUALISATION = "PE" #options: "PE", "channel", "both"
