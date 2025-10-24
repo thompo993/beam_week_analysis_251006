@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 filepath = r"File Path Here"
-
+savepath = r"Save Path Here"
 
 # Read CSV
 df = pd.read_csv(filepath, on_bad_lines='skip', delimiter=",")
@@ -46,14 +46,18 @@ ax.plot(centered_58, v_58, label='58V Single Photon Height 48.82 LSB', linewidth
 ax.plot(centered_59, v_59, label='59V Single Photon Height 56.07 LSB', linewidth=1)
 
 # Format plot
-ax.set_xlabel("Amplitude relative to peak [LSB]", fontsize=14)
-ax.set_ylabel("Counts", fontsize=14)
-ax.set_title("Layered centred MPS at different ∆LSB", fontsize=14)
-ax.legend(loc='best', fontsize=10)
+ax.set_xlabel("Amplitude relative to peak [LSB]", fontsize=20)
+ax.set_ylabel("Counts", fontsize=20)
+ax.set_title("Layered overlay of MPS at different ∆LSB", fontsize=20)
+ax.legend(loc='best', fontsize=15)
 ax.tick_params(axis='both', which='major', labelsize=14)
 ax.grid(True, alpha=0.3)
 ax.axvline(x=0, color='red', linestyle='--', alpha=0.5, linewidth=1)
 ax.set_xlim(-250,400)
+
+plt.tight_layout()
+plt.savefig(savepath, dpi=300)
+plt.show()
 
 plt.tight_layout()
 plt.show()
