@@ -7,15 +7,18 @@ import sys
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 import personalpaths
+from matplotlib.lines import Line2D
 
 FOLDER_PATH = personalpaths.FOLDER_PATH_BEAM_SOURCE_COMPARISON # if not using personalpaths file, use r"filepath"
 LOG = 'linear' #options: 'log', 'linear'
-channel = 1
+channel = 5
 PE = 25
+MODULE = "BB"
 
-xlim = [0, 1500]
+xlim = [0, 2500]
+
 ylim = [0, 4]
-size = [12,10]
+size = [14,10]
 
 #parameters for peak finding 
 threshold = 250         #lower limit in xfor peak finding
@@ -41,8 +44,6 @@ def smooth_data(y, window=70, poly=4):
 def peak_finder(data):
     y = smooth_data(data)
     x = np.arange(len(y))
-    if SHOW_GAUSS:
-        plt.plot(y)
     #find guess for gaussian
     peaks, _ = find_peaks(y, height = p_height)
     cut = 0
@@ -67,8 +68,8 @@ def peak_finder(data):
     popt, _ = curve_fit(gaussian,x,y,p0 = [p_height, peak_guess,peak_guess/2], maxfev = 10000000)
    
     if SHOW_GAUSS:
-        plt.plot(x, gaussian(x,*popt))
-    plt.scatter(popt[1], gaussian(popt[1],*popt), color = "k")
+        ax.plot(x, gaussian(x,*popt))
+    ax.scatter(popt[1], gaussian(popt[1],*popt), color = "k")
 
     return [popt[1], gaussian(popt[1],*popt)]
 
@@ -92,9 +93,9 @@ def valley_finder(data, m_peak, p_h):
         mu = 0
     else:    
         mu = popt[1]
-        plt.scatter(mu, -gaussian(mu,*popt)+p_h, color = "r")
+        ax.scatter(mu, -gaussian(mu,*popt)+p_h, color = "r")
         if SHOW_GAUSS:
-            plt.plot(x, -gaussian(x,*popt)+p_h)
+            ax.plot(x, -gaussian(x,*popt)+p_h)
 
     return [mu, -gaussian(mu,*popt)+p_h]
 
@@ -107,11 +108,12 @@ def HWHM_right(coordinates, data):
         if data[k] < half*(1+hwhm_ave) and data[k] > half*(1-hwhm_ave):
             x.append(k)
             y.append(data[k])
-    plt.scatter(np.average(x), np.average(y), color = 'g')
+    ax.scatter(np.average(x), np.average(y), color = 'g')
     return np.average(x)-coordinates[0]
     
 
 f.write("CHANNEL %s\n"%channel)
+f.write("Module " + MODULE +"\n") 
 f.write("PE %s\n\n"%PE)
 
 f.write("Analysis parameters:\n")
@@ -122,7 +124,14 @@ f.write("hwhm_ave: %s\n" %hwhm_ave)
 f.write("ran: %s\n\n" %ran)
 
 
-plt.figure(figsize=size)
+fig, ax = plt.subplots(figsize=size)
+
+
+prop_cycle = plt.rcParams['axes.prop_cycle']
+colors = prop_cycle.by_key()['color']
+
+col = 0
+
 for file in os.listdir(FOLDER_PATH):
     file_path = os.path.join(FOLDER_PATH, file)
     if "csv" not in file:
@@ -135,40 +144,84 @@ for file in os.listdir(FOLDER_PATH):
         x = range(len(df))
         norm = np.sum(df)/1000
 
+        rebin = []
+        tmp = [df[i] for i in range(len(df))]
+        
+        for k in range(16):
+            tmp.append(0)
+
+        for i in range(len(df)):
+            bin = tmp[i-8:i+8]
+            rebin.append(np.average(bin)/norm)
+        ax.plot(x, rebin, label = file[:-4], alpha = 0.5, color = colors[col])
+
+
         
         peak_coordinates = peak_finder(df/norm)  
         valley_coordinates = valley_finder(df/norm, peak_coordinates[0],peak_coordinates[1])
         
         hwhm = HWHM_right(peak_coordinates,df/norm)
 
+        if valley_coordinates[0] != 0:
+            peak_to_valley_distance = peak_coordinates[0]-valley_coordinates[0]
+            peak_to_valley_ratio = peak_coordinates[1]/valley_coordinates[1]
+        else: 
+            peak_to_valley_distance = None
+            peak_to_valley_ratio = None
 
- 
-        peak_to_valley_distance = peak_coordinates[0]-valley_coordinates[0]
-        peak_to_valley_ratio = peak_coordinates[1]/valley_coordinates[1]
 
         # print(file)
         # print(peak_coordinates)
         # print(valley_coordinates)
-        plt.plot(x, df/norm, label = file, alpha = 0.5, )
-
 
         f.write("File name: " + file +"\n")
         f.write("Right HWHM: %s lsb\n"%hwhm)
         f.write("Peak to valley distance: %s lsb\n"%peak_to_valley_distance)
         f.write("Peak to valley ratio: %s\n\n" %peak_to_valley_ratio)
-    
+
+        infotext = file[:-4] +"°\n"
+        infotext += "Right-hand HWHM: {:.0f} lsb\n".format(hwhm) 
+        if peak_to_valley_distance != None:
+            infotext += "P_to_V distance: {:.0f} lsb\n".format(peak_to_valley_distance)
+            infotext += "P_to_V ratio: {:.2f}".format(peak_to_valley_ratio)
+        else:
+            infotext += "P_to_V distance: N/A\n"
+            infotext += "P_to_V ratio: N/A"
+
+        props = dict(boxstyle='round', facecolor=colors[col], alpha=0.30)
+
+        ax.text(0.98, 0.95-(col/8), infotext, transform=ax.transAxes, fontsize=10,
+                verticalalignment='top', horizontalalignment='right', bbox=props)
+        
+        col += 1
+ax.set_xlim(xlim)
+ax.set_ylim(ylim)
+
+ax.set_xlabel("LSB")
+secx = ax.secondary_xaxis('top')
+secx.set_xticklabels(["{:.0f}".format(x/PE) for x in ax.get_xticks()])
+secx.set_xlabel("Photons")
+ax.set_ylabel("Counts [Area Normalised]")
+ax.grid()
+
+ax.set_title("Comparison of PHS - Module " + MODULE, fontsize= 20)
+ax.set_yscale(LOG)
+
+Line2D([0], [0], label='manual point', marker='s', markersize=10, 
+         markeredgecolor='r', markerfacecolor='k', linestyle='')
+
+handles = [ Line2D([0], [0], color='g', lw=0, marker = 'o', label='rhHWHM'),
+            Line2D([0], [0], color='k', lw=0, marker = 'o', label='Peak'),
+            Line2D([0], [0], color='r', lw=0, marker = 'o', label='Valley')]
+ax.legend(handles=handles, loc = 'lower right')
+
+fig.tight_layout()
+
+if not SHOW_GAUSS: 
+    filename = "plot_ch%s"%channel
+    plt.savefig(os.path.join(FOLDER_PATH,filename))
 
 
-plt.title("CH %s" %channel)
-plt.yscale(LOG)
-plt.xlim(xlim)
-plt.ylim(ylim)
-plt.legend()
-plt.grid()
-if SHOW_GAUSS:
-    filename = "plot_gauss" 
-else: filename = "plot"
-plt.savefig(os.path.join(FOLDER_PATH,filename))
 plt.show() 
 
 f.close()

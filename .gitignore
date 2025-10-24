@@ -12,4 +12,5 @@ Ignore Jupyter notebooks
 Ignore virtual environments
 *venv
 Ignore paths
-personalpaths.py
+personalpaths*
+*pycache*
