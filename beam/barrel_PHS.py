@@ -11,51 +11,63 @@ from matplotlib.lines import Line2D
 
 FOLDER_PATH = personalpaths.FOLDER_PATH_BARREL # if not using personalpaths file, use r"filepath"
 xlim = [0, 3500]
-ylim = [0, 4]
+ylim = [0, 2]
 size = [14,10]
 PE = 25
+alpha = 0.5
 
 
 fig, ax = plt.subplots(figsize=size)
 
 
 for file in os.listdir(FOLDER_PATH):
-
     if "csv" in file:
         file_path = os.path.join(FOLDER_PATH, file)
-        df = np.loadtxt(file_path, delimiter=",", dtype=float)
         if "AA" in file:
+            df = np.loadtxt(file_path, delimiter=",", dtype=float)
+
             channel = 3
             y = df[:,channel]
             x = range(len(df))
+            # x = [i/3 for i in x]
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, label = "Inner ring")
+            ax.plot(x,y/norm, alpha = alpha, label = "Inner ring")
 
+for file in os.listdir(FOLDER_PATH):
+    if "csv" in file:
+        file_path = os.path.join(FOLDER_PATH, file)
         if "BB" in file:        
+            df = np.loadtxt(file_path, delimiter=",", dtype=float)
+
             channel = 1
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, label = "Ring 5")
+            ax.plot(x,y/norm, alpha = alpha, label = "Ring 5")
 
             channel = 5
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, label = "Ring 6")
+            ax.plot(x,y/norm, alpha = alpha, label = "Ring 6")
         
-        if "C_" in file:
+for file in os.listdir(FOLDER_PATH):
+    if "csv" in file:
+        file_path = os.path.join(FOLDER_PATH, file)
+        if "C_" in file:       
+            df = np.loadtxt(file_path, delimiter=",", dtype=float)
+
             channel = 1
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, label = "Ring 7")
+            ax.plot(x,y/norm, alpha = alpha, label = "Ring 7")
 
             channel = 7
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, label = "Ring 8")
+            ax.plot(x,y/norm, alpha = alpha, label = "Ring 8")
         
         
 ax.set_xlim(xlim)
@@ -68,10 +80,13 @@ secx.set_xlabel("Photons")
 ax.set_ylabel("Counts [Area Normalised]")
 ax.grid()
 
-ax.set_title("Rings PHS")
+ax.set_title("Characteristic Pulse Height Spectra for each ring", fontsize = 15)
+
+ax.legend()
+
 ax.legend()
 fig.tight_layout()
 
 filename = "ring"
-# plt.savefig(os.path.join(FOLDER_PATH,filename))
+plt.savefig(os.path.join(FOLDER_PATH,filename))
 plt.show() 

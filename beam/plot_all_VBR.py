@@ -59,7 +59,7 @@ for file in os.listdir(FOLDER_PATH):
     if "csv" in file:
         df = np.loadtxt(file_path,delimiter=",")
         for i in range(int(len(df)/2)):
-            if df[1+2*i] > 30: #reject lines that were not fitted right
+            if df[1+2*i] < 53: #reject lines that were not fitted right
                 plt.plot(xzoom, line(df[0+2*i], df[1+2*i],xzoom), color = col[k], linewidth = 0.5 )
         k+=1
 
