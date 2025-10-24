@@ -10,7 +10,7 @@ import personalpaths
 from matplotlib.lines import Line2D
 
 FOLDER_PATH = personalpaths.FOLDER_PATH_BARREL # if not using personalpaths file, use r"filepath"
-xlim = [0, 2500]
+xlim = [0, 3500]
 ylim = [0, 4]
 size = [14,10]
 PE = 25
@@ -20,10 +20,16 @@ fig, ax = plt.subplots(figsize=size)
 
 
 for file in os.listdir(FOLDER_PATH):
+
     if "csv" in file:
         file_path = os.path.join(FOLDER_PATH, file)
         df = np.loadtxt(file_path, delimiter=",", dtype=float)
-    
+        if "AA" in file:
+            channel = 3
+            y = df[:,channel]
+            x = range(len(df))
+            norm = np.sum(y)/1000
+            ax.plot(x,y/norm, label = "Inner ring")
 
         if "BB" in file:        
             channel = 1
@@ -67,5 +73,5 @@ ax.legend()
 fig.tight_layout()
 
 filename = "ring"
-plt.savefig(os.path.join(FOLDER_PATH,filename))
+# plt.savefig(os.path.join(FOLDER_PATH,filename))
 plt.show() 

@@ -24,7 +24,7 @@ for file in os.listdir(FOLDER_PATH):
     if "csv" in file:    
         df = np.loadtxt(file_path,delimiter=",")
         for i in range(int(len(df)/2)):
-            if df[1+2*i] > 30: #reject lines that were not fitted right. best course of action would be to find those and check why
+            if df[1+2*i] < 53: #reject lines that were not fitted right. best course of action would be to find those and check why
                 plt.plot(x, line(df[0+2*i], df[1+2*i],x), color = col[k], linewidth = 0.5 )
 
                 vbr.append(df[1+2*i])
@@ -35,11 +35,11 @@ legend_elements = [Line2D([0], [0], color=col[0], lw=4, label=lab[0]),
                    Line2D([0], [0], color=col[1], lw=4, label=lab[1]),
                    Line2D([0], [0], color=col[2], lw=4, label=lab[2]),
                    Line2D([0], [0], color=col[3], lw=4, label=lab[3])]
-plt.title("Vbr",fontsize =20)
+plt.title("Linear fit of gain profile",fontsize =20)
 plt.xlim(0,None)
 plt.legend(handles=legend_elements)
-plt.xlabel("PE")
-plt.ylabel("V")
+plt.xlabel("$\Delta$LSB per photo-electron")
+plt.ylabel("Bias voltage [V]")
 plt.grid()
 plt.tight_layout()
 plt.savefig(os.path.join(FOLDER_PATH, "vbr"))
@@ -69,10 +69,10 @@ legend_elements = [Line2D([0], [0], color=col[0], lw=4, label=labz[0]),
                    Line2D([0], [0], color=col[3], lw=4, label=labz[3])]
 
 # Create the figure
-plt.title("Zoomed", fontsize = 20)
+plt.title("Linear fit of gain profile (zoomed in)", fontsize = 20)
 plt.legend(handles=legend_elements)
-plt.xlabel("PE")
-plt.ylabel("V")
+plt.xlabel("$\Delta$LSB per photo-electron")
+plt.ylabel("Bias voltage [V]")
 plt.grid()
 plt.tight_layout()
 plt.savefig(os.path.join(FOLDER_PATH, "vbr_zoom"))
@@ -82,8 +82,8 @@ plt.show()
 
 plt.figure(figsize=[14,10])
 plt.hist(vbr,15)
-plt.title("Histogram of Vbr", fontsize = 20)
-plt.xlabel("VBR")
+plt.title("Histogram of break-down voltage", fontsize = 20)
+plt.xlabel("Break-down voltage")
 plt.grid()
 plt.tight_layout()
 plt.savefig(os.path.join(FOLDER_PATH, "vbr_hist"))
