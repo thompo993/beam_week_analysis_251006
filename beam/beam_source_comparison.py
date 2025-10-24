@@ -7,7 +7,7 @@ import sys
 from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 import personalpaths
-from matplotlib.colors import TABLEAU_COLORS, same_color
+from matplotlib.lines import Line2D
 
 FOLDER_PATH = personalpaths.FOLDER_PATH_BEAM_SOURCE_COMPARISON # if not using personalpaths file, use r"filepath"
 LOG = 'linear' #options: 'log', 'linear'
@@ -43,8 +43,6 @@ def smooth_data(y, window=70, poly=4):
 def peak_finder(data):
     y = smooth_data(data)
     x = np.arange(len(y))
-    if SHOW_GAUSS:
-        ax.plot(y)
     #find guess for gaussian
     peaks, _ = find_peaks(y, height = p_height)
     cut = 0
@@ -195,6 +193,8 @@ for file in os.listdir(FOLDER_PATH):
                 verticalalignment='top', horizontalalignment='right', bbox=props)
         
         col += 1
+ax.set_xlim(xlim)
+ax.set_ylim(ylim)
 
 ax.set_xlabel("LSB")
 secx = ax.secondary_xaxis('top')
@@ -202,17 +202,24 @@ secx.set_xticklabels(["{:.0f}".format(x/PE) for x in ax.get_xticks()])
 secx.set_xlabel("Photons")
 ax.set_ylabel("Counts (normalised to area 1000)")
 ax.grid()
-ax.set_xlim(xlim)
-ax.set_ylim(ylim)
-ax.set_title("Channel %s - Module "%channel + MODULE)
+
+ax.set_title("Comparison of PHS - Module " + MODULE, fontsize= 20)
 ax.set_yscale(LOG)
 
+Line2D([0], [0], label='manual point', marker='s', markersize=10, 
+         markeredgecolor='r', markerfacecolor='k', linestyle='')
 
-# plt.legend()
-if SHOW_GAUSS:
-    filename = "plot_gauss" 
-else: filename = "plot"
-plt.savefig(os.path.join(FOLDER_PATH,filename))
+handles = [ Line2D([0], [0], color='g', lw=0, marker = 'o', label='rhHWHM'),
+            Line2D([0], [0], color='k', lw=0, marker = 'o', label='Peak'),
+            Line2D([0], [0], color='r', lw=0, marker = 'o', label='Valley')]
+ax.legend(handles=handles, loc = 'lower right')
+
+if not SHOW_GAUSS: 
+    filename = "plot_ch%s"%channel
+    plt.savefig(os.path.join(FOLDER_PATH,filename))
+
+fig.tight_layout()
+
 plt.show() 
 
 f.close()
