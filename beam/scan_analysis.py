@@ -11,9 +11,9 @@ SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
 VISUALISATION = "PE" #options: "PE", "channel", "both"
 
-xlim = [None, None]
-ylim = [None, 1000]
-size = [10,8]
+xlim = [0, 3000]
+ylim = [0, 200]
+size = [14,10]
 
 def plot_PE(fold):
     plt.figure(figsize=size)
@@ -24,15 +24,18 @@ def plot_PE(fold):
                 df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
                 x = range(len(df))
                 plt.plot(x, df, label = "ch%s"%i)
-    plt.title(fold[-5:])
+    plt.title(fold[-5:] + " channel comparison", fontsize = 20)
+    plt.xlabel("LSB")
+    plt.ylabel("Counts")
     plt.xlim(xlim)
     plt.yscale(LOG)
     plt.ylim(ylim)
+    plt.tight_layout()
     plt.legend()
     plt.grid()
     if SAVE_PNG:
         plt.savefig(os.path.join(FOLDER_PATH,fold[-5:]+LOG))
-    plt.show()
+    plt.close()
 
 def plot_channels(num):
     plt.figure(figsize=size)
@@ -44,15 +47,18 @@ def plot_channels(num):
                 df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
                 x = range(len(df))
                 plt.plot(x, df, label = folder[-5:])
-    plt.title("CH_%s"%num)
+    plt.title("CH_%s PE scan"%num, fontsize = 20)
+    plt.xlabel("LSB")
+    plt.ylabel("Counts")
     plt.yscale(LOG)
     plt.xlim(xlim)
     plt.ylim(ylim)
     plt.legend()
+    plt.tight_layout()
     plt.grid()
     if SAVE_PNG:
         plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num+LOG))
-    plt.show() 
+    plt.close() 
 
 
 if VISUALISATION == "PE" or VISUALISATION == "both":

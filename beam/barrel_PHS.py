@@ -19,6 +19,12 @@ alpha = 0.5
 
 fig, ax = plt.subplots(figsize=size)
 
+def smooth(y, window=70, poly=4):
+    if window % 2 == 0:
+        window += 1
+    if window > len(y):
+        window = len(y) - 1 if len(y) % 2 == 0 else len(y)
+    return savgol_filter(y, window_length=window, polyorder=poly)
 
 for file in os.listdir(FOLDER_PATH):
     if "csv" in file:
@@ -31,7 +37,7 @@ for file in os.listdir(FOLDER_PATH):
             x = range(len(df))
             # x = [i/3 for i in x]
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, alpha = alpha, label = "Inner ring")
+            ax.plot(x,smooth(y)/norm, alpha = alpha, label = "Inner ring")
 
 for file in os.listdir(FOLDER_PATH):
     if "csv" in file:
@@ -43,13 +49,13 @@ for file in os.listdir(FOLDER_PATH):
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, alpha = alpha, label = "Ring 5")
+            ax.plot(x,smooth(y)/norm, alpha = alpha, label = "Ring 5")
 
             channel = 5
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, alpha = alpha, label = "Ring 6")
+            ax.plot(x,smooth(y)/norm, alpha = alpha, label = "Ring 6")
         
 for file in os.listdir(FOLDER_PATH):
     if "csv" in file:
@@ -61,22 +67,22 @@ for file in os.listdir(FOLDER_PATH):
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, alpha = alpha, label = "Ring 7")
+            ax.plot(x,smooth(y)/norm, alpha = alpha, label = "Ring 7")
 
             channel = 7
             y = df[:,channel]
             x = range(len(df))
             norm = np.sum(y)/1000
-            ax.plot(x,y/norm, alpha = alpha, label = "Ring 8")
+            ax.plot(x,smooth(y)/norm, alpha = alpha, label = "Ring 8")
         
         
 ax.set_xlim(xlim)
 ax.set_ylim(ylim)
 
 ax.set_xlabel("LSB")
-secx = ax.secondary_xaxis('top')
-secx.set_xticklabels(["{:.0f}".format(x/PE) for x in ax.get_xticks()])
-secx.set_xlabel("Photons")
+# secx = ax.secondary_xaxis('top')
+# secx.set_xticklabels(["{:.0f}".format(x/PE) for x in ax.get_xticks()])
+# secx.set_xlabel("Photons")
 ax.set_ylabel("Counts [Area Normalised]")
 ax.grid()
 
