@@ -16,6 +16,7 @@ PE = 25
 MODULE = "BB"
 
 xlim = [0, 2500]
+
 ylim = [0, 4]
 size = [14,10]
 
@@ -200,7 +201,7 @@ ax.set_xlabel("LSB")
 secx = ax.secondary_xaxis('top')
 secx.set_xticklabels(["{:.0f}".format(x/PE) for x in ax.get_xticks()])
 secx.set_xlabel("Photons")
-ax.set_ylabel("Counts (normalised to area 1000)")
+ax.set_ylabel("Counts [Area Normalised]")
 ax.grid()
 
 ax.set_title("Comparison of PHS - Module " + MODULE, fontsize= 20)
@@ -214,11 +215,12 @@ handles = [ Line2D([0], [0], color='g', lw=0, marker = 'o', label='rhHWHM'),
             Line2D([0], [0], color='r', lw=0, marker = 'o', label='Valley')]
 ax.legend(handles=handles, loc = 'lower right')
 
+fig.tight_layout()
+
 if not SHOW_GAUSS: 
     filename = "plot_ch%s"%channel
     plt.savefig(os.path.join(FOLDER_PATH,filename))
 
-fig.tight_layout()
 
 plt.show() 
 
