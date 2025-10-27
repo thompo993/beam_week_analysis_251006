@@ -2,13 +2,15 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os
 import personalpaths as personalpaths
+plt.rcParams.update({'font.size': 20})
+
 
 #data needs to be in a csv with the last 4 digits are pe1 and pe2
 
 
 
 PATH = personalpaths.MISMATCHED_PATH
-rebinning = False
+rebinning = True
 
 def rebin(x):
     rebin = []

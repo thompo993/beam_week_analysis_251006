@@ -8,6 +8,8 @@ from scipy.signal import find_peaks
 from scipy.signal import savgol_filter
 import personalpaths
 from matplotlib.lines import Line2D
+plt.rcParams.update({'font.size': 20})
+
 
 FOLDER_PATH = personalpaths.FOLDER_PATH_BEAM_SOURCE_COMPARISON # if not using personalpaths file, use r"filepath"
 LOG = 'linear' #options: 'log', 'linear'
@@ -190,7 +192,7 @@ for file in os.listdir(FOLDER_PATH):
 
         props = dict(boxstyle='round', facecolor=colors[col], alpha=0.30)
 
-        ax.text(0.98, 0.95-(col/8), infotext, transform=ax.transAxes, fontsize=10,
+        ax.text(0.98, 0.95-(col/7), infotext, transform=ax.transAxes, fontsize=15,
                 verticalalignment='top', horizontalalignment='right', bbox=props)
         
         col += 1
@@ -213,9 +215,9 @@ Line2D([0], [0], label='manual point', marker='s', markersize=10,
 handles = [ Line2D([0], [0], color='g', lw=0, marker = 'o', label='rhHWHM'),
             Line2D([0], [0], color='k', lw=0, marker = 'o', label='Peak'),
             Line2D([0], [0], color='r', lw=0, marker = 'o', label='Valley')]
-ax.legend(handles=handles, loc = 'lower right')
+ax.legend(handles=handles, loc = 'lower right', fontsize = 15)
 
-fig.tight_layout()
+plt.tight_layout()
 
 if not SHOW_GAUSS: 
     filename = "plot_ch%s"%channel
