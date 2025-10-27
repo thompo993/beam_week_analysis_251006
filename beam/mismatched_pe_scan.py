@@ -52,7 +52,7 @@ def plot_channels(num):
         plt.ylim(ylim)
     plt.xlim(xlim)
     plt.xlabel("LSB", fontsize =20 )
-    plt.ylabel("Counts [area normalised]", fontsize =20)
+    plt.ylabel("Counts [Area Normalised]", fontsize =20)
     leg = plt.legend()
 
     for legobj in leg.legend_handles: #increase size of lines in legend to show colors better

@@ -8,6 +8,19 @@ import personalpaths as personalpaths
 
 
 PATH = personalpaths.MISMATCHED_PATH
+rebinning = False
+
+def rebin(x):
+    rebin = []
+    zero = np.zeros(8)
+    tmp = np.append(zero, x)
+    tmp = np.append(tmp,zero)
+    for i in range(len(x)):
+        bin = np.average(tmp[i-8: i+8])
+        rebin.append(bin)
+    return rebin
+
+
 def plot(a,b):
     pe1 = a    
     pe2 = b
@@ -18,13 +31,19 @@ def plot(a,b):
         if file.endswith(".csv"):
             if (str(pe1)+str(pe1) in file) or (str(pe1)+str(pe2) in file) or (str(pe2)+str(pe1) in file) or (str(pe2)+str(pe2) in file):
                 data = np.loadtxt(os.path.join(PATH,"data",file), dtype = float, delimiter  =",")
-                plt.plot(data*1000/np.sum(data), label = file[-8:-6] + "  " + file[-6:-4])
+                data = data*1000/np.sum(data)
+                if rebinning:
+
+                    data = rebin(data)
+
+                plt.plot(data, label = file[-8:-6] + "  " + file[-6:-4])
             
-    plt.title(title+ " comparison - Channel 0")
+    plt.title(title+ " comparison - Channel 0", fontsize = 20)
     plt.grid()
+    # plt.ylim(0,4)
     plt.xlim(0,2500)
-    plt.xlabel("LSB")
-    plt.ylabel("Counts")
+    plt.xlabel("LSB", fontsize = 20)
+    plt.ylabel("Counts", fontsize = 20)
     plt.legend()
 
     plt.yscale('log')
