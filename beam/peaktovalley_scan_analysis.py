@@ -9,16 +9,18 @@ import personalpaths
 FOLDER_PATH = personalpaths.SCAN_PATH#r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
-VISUALISATION = "PE" #options: "PE", "channel", "both"
+VISUALISATION = "both" #options: "PE", "channel", "both"
 
 xlim = [0, 3000]
-ylim = [0, 200]
+ylim = [0, 600]
 size = [14,10]
 
-threshold = 250         
-p_height = 200        
-p_to_v_diff = 0.10      
-window = 250    
+threshold = 150         
+p_height = 150        
+p_to_v_diff = 100      
+window = 150    
+valley_window = 150
+perc = 0.2
 SHOW_GAUSS = False
 
 def gaussian(x, A, mu, sigma):
@@ -26,7 +28,7 @@ def gaussian(x, A, mu, sigma):
 
 
 
-def smooth_data(y, window=70, poly=4):
+def smooth_data(y, window=70, poly=3):
     if window % 2 == 0:
         window += 1
     if window > len(y):
@@ -37,21 +39,36 @@ def smooth_data(y, window=70, poly=4):
 def findpeak(y):
     x = np.arange(len(y))
 
-    y0= y[500:2500] #take only a slice of data for the gaussian fit  
-    x0 = x[500:2500]
-    popt, _ = curve_fit(gaussian,x0,y0,p0 = [p_height, 1500,1000], maxfev = 10000000)
-
-    guess = int(popt[1])
-    if guess < 750:
-        guess = 750
+    peaks,_ = find_peaks(y, height=40, width=50)
+    if len(peaks)==0:       
+        guess =1500
+    elif len(peaks)>1:    guess = int(peaks[-1])
+    else: guess = int(peaks)
+    if guess < threshold:
+        guess = 450
     if guess > 2300:
         guess = 2300
     if guess > 1800:
         ran = 600
+    elif guess < 500:
+        ran = 100
     else: ran = window
-    x = x[guess-ran:guess+ran]
-    y = y[guess-ran:guess+ran]
-    popt, _ = curve_fit(gaussian,x,y,p0 = [p_height, guess,popt[2]], maxfev = 10000000)
+    if guess + ran -threshold < 200:
+        x1 = x[threshold:threshold +400]
+        y1 = y[threshold:threshold +400]
+        guess = threshold + 500
+    else:
+        x1 = x[guess-ran:guess+ran]
+        y1 = y[guess-ran:guess+ran]
+    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,50], maxfev = 10000000)
+
+    guess = int(popt[1])
+    sigma = int(popt[2]*0.6)
+    x = x[guess - sigma : guess + sigma]
+    y = y[guess - sigma : guess + sigma]
+
+    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,popt[2]/100], maxfev = 10000000)
+
    
     if SHOW_GAUSS:
         plt.plot(x, gaussian(x,*popt))
@@ -66,11 +83,13 @@ def findvalley(y, m_peak, p_h):
     x = np.arange(len(y))
    
     valley_guess = (m_peak+threshold)/2
+    valley_window = perc *valley_guess
 
-    min_range = int(valley_guess - window)
+    min_range = int(valley_guess - valley_window)
+    max_range = int(valley_guess + valley_window)
     if min_range < threshold:
         min_range = threshold
-    max_range = int(valley_guess + window)
+        max_range = threshold + 300
     y = y[min_range:max_range] #take only a slice of data for the gaussian fit  
     x = x[min_range:max_range]
     popt, _ = curve_fit(gaussian,x,y,p0 = [p_to_v_diff, valley_guess,valley_guess], maxfev =1000000)
@@ -88,10 +107,10 @@ def findvalley(y, m_peak, p_h):
 
 def peak_to_valley(p,v):
     pv_ratio = p[1]/v[1]
+    x = [p[0], v[0]]    
+    y = [p[1], v[1]]
+    plt.plot(x,y, color = "k", alpha = 0.25)
     return pv_ratio
-
-
-
 
 
 
@@ -104,11 +123,13 @@ def plot_PE(fold):
                 df = np.loadtxt(file_path, dtype = float, delimiter=',')
                 x = range(len(df))                
                 data = smooth_data(df)
-                peak = findpeak(data)
-                valley = findvalley(data, peak[0], peak[1])
-                peaktovalley = peak_to_valley(peak, valley)
-                PtV = "{:.2f}".format(peaktovalley)
-                plt.plot(x, data, label = "ch%s - PtV: "%i + PtV)
+                if  fold[-5:] != "PE_05" and fold[-5:] != "PE_10":
+                    peak = findpeak(data)
+                    valley = findvalley(data, peak[0], peak[1])
+                    peaktovalley = peak_to_valley(peak, valley)
+                    PtV = "{:.2f}".format(peaktovalley)
+                    plt.plot(x, data, label = "ch%s - PtV: "%i + PtV)
+                else: plt.plot(x, data, label = "ch%s"%i)
     plt.title(fold[-5:] + " channel comparison", fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
@@ -116,34 +137,44 @@ def plot_PE(fold):
     plt.yscale(LOG)
     plt.ylim(ylim)
     plt.tight_layout()
-    plt.legend(fontsize = 10)
+    plt.legend(fontsize = 15)
     plt.grid()
     if SAVE_PNG:
         plt.savefig(os.path.join(FOLDER_PATH,fold[-5:]+LOG))
     plt.close()
+    print(fold[-5:] + " channel comparison")
 
 def plot_channels(num):
     plt.figure(figsize=size)
     for folder in os.walk(FOLDER_PATH):
         folder = folder[0]
+
         for file in os.listdir(folder):
-            if "%s.csv"%num in file:
-                file_path = os.path.join(folder, file)
-                df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
-                x = range(len(df))
-                plt.plot(x, df, label = folder[-5:])
+            if  folder[-5:] != "PE_05" and folder[-5:] != "PE_10":
+                if "%s.csv"%num in file:
+                    file_path = os.path.join(folder, file)
+                    df = np.loadtxt(file_path, dtype = float, delimiter=',')
+                    x = range(len(df))                
+                    data = smooth_data(df)
+                    peak = findpeak(data)
+                    valley = findvalley(data, peak[0], peak[1])
+                    peaktovalley = peak_to_valley(peak, valley)
+                    PtV = "{:.2f}".format(peaktovalley)
+
+                    plt.plot(x, data, label = folder[-5:] + " - PtV: " + PtV)
     plt.title("CH_%s PE scan"%num, fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
     plt.yscale(LOG)
-    # plt.xlim(xlim)
+    plt.xlim(xlim)
     plt.ylim(ylim)
-    plt.legend(fontsize = 10)
+    plt.legend(fontsize = 15)
     plt.tight_layout()
     plt.grid()
     if SAVE_PNG:
         plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num+LOG))
     plt.close() 
+    print("CH_%s PE scan"%num)
 
 
 if VISUALISATION == "PE" or VISUALISATION == "both":
