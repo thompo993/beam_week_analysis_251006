@@ -43,7 +43,7 @@ def findpeak(y):
     if len(peaks)==0:       
         guess =1500
     elif len(peaks)>1:    guess = int(peaks[-1])
-    else: guess = int(peaks)
+    elif len(peaks)==1:   guess = int(peaks[0])
     if guess < threshold:
         guess = 450
     if guess > 2300:
@@ -107,10 +107,11 @@ def findvalley(y, m_peak, p_h):
 
 def peak_to_valley(p,v):
     pv_ratio = p[1]/v[1]
+    pv_distance = p[0]-v[0]
     x = [p[0], v[0]]    
     y = [p[1], v[1]]
     plt.plot(x,y, color = "k", alpha = 0.25)
-    return pv_ratio
+    return pv_ratio,pv_distance
 
 
 
@@ -126,18 +127,24 @@ def plot_PE(fold):
                 if  fold[-5:] != "PE_05" and fold[-5:] != "PE_10":
                     peak = findpeak(data)
                     valley = findvalley(data, peak[0], peak[1])
-                    peaktovalley = peak_to_valley(peak, valley)
+                    peaktovalley,distance = peak_to_valley(peak, valley)
                     PtV = "{:.2f}".format(peaktovalley)
                     plt.plot(x, data, label = "ch%s - PtV: "%i + PtV)
-                else: plt.plot(x, data, label = "ch%s"%i)
+                    
+                    f.write("\n"+fold[-2:]+",%s,%s,%s"%(i,peaktovalley,distance))
+
+                else:
+                    plt.plot(x, data, label = "ch%s"%i)
     plt.title(fold[-5:] + " channel comparison", fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
     plt.xlim(xlim)
+    plt.rc('xtick', labelsize=20)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=20)
     plt.yscale(LOG)
     plt.ylim(ylim)
     plt.tight_layout()
-    plt.legend(fontsize = 15)
+    plt.legend(fontsize = 20)
     plt.grid()
     if SAVE_PNG:
         plt.savefig(os.path.join(FOLDER_PATH,fold[-5:]+LOG))
@@ -158,17 +165,23 @@ def plot_channels(num):
                     data = smooth_data(df)
                     peak = findpeak(data)
                     valley = findvalley(data, peak[0], peak[1])
-                    peaktovalley = peak_to_valley(peak, valley)
+                    peaktovalley,distance = peak_to_valley(peak, valley)
                     PtV = "{:.2f}".format(peaktovalley)
 
                     plt.plot(x, data, label = folder[-5:] + " - PtV: " + PtV)
+                    if VISUALISATION != "both":
+                        f.write("\n"+folder[-2:]+",%s,%s,%s"%(num,peaktovalley, distance))
+
+
     plt.title("CH_%s PE scan"%num, fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
     plt.yscale(LOG)
+    plt.rc('xtick', labelsize=20)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=20)
     plt.xlim(xlim)
     plt.ylim(ylim)
-    plt.legend(fontsize = 15)
+    plt.legend(fontsize = 20)
     plt.tight_layout()
     plt.grid()
     if SAVE_PNG:
@@ -176,6 +189,10 @@ def plot_channels(num):
     plt.close() 
     print("CH_%s PE scan"%num)
 
+
+
+f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
+f.write("PE,channel,peaktovalleyratio")
 
 if VISUALISATION == "PE" or VISUALISATION == "both":
     for folder in os.walk(FOLDER_PATH):
@@ -186,3 +203,5 @@ if VISUALISATION == "PE" or VISUALISATION == "both":
 if VISUALISATION == "channel" or VISUALISATION == "both":
     for i in range(8):
         plot_channels(i)
+
+f.close()

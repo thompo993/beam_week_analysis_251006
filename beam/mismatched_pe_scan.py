@@ -14,9 +14,9 @@ if description != "":
     description = " - " + description
 
 xlim = [0, 3500]
-ylim = [0, 2] #choose appropriate limits, only applies to linear plots
+ylim = [0, 4] #choose appropriate limits, only applies to linear plots
 size = [14,10]
-rebinning = False
+rebinning = True
 
 def rebin(x,n): 
     rebin = []
@@ -45,7 +45,7 @@ def plot_channels(num):
                 df = df/norm
                 x = range(len(df))
                 #plot for each file
-                plt.plot(x, df, label = folder[-10:], linewidth = 0.5)
+                plt.plot(x, df, label = folder[-10:])
     plt.title("Mismatched PE scan - Channel %s"%num + description, fontsize =20)
     plt.yscale(LOG)
     if LOG == 'linear':    
@@ -53,7 +53,9 @@ def plot_channels(num):
     plt.xlim(xlim)
     plt.xlabel("LSB", fontsize =20 )
     plt.ylabel("Counts [Area Normalised]", fontsize =20)
-    leg = plt.legend()
+    plt.rc('xtick', labelsize=20)    # fontsize of the tick labels
+    plt.rc('ytick', labelsize=20)
+    leg = plt.legend(fontsize =20)
 
     for legobj in leg.legend_handles: #increase size of lines in legend to show colors better
         legobj.set_linewidth(4.0)

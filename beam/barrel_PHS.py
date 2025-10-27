@@ -15,6 +15,7 @@ ylim = [0, 2]
 size = [14,10]
 PE = 25
 alpha = 0.5
+plt.rcParams.update({'font.size': 20})
 
 
 fig, ax = plt.subplots(figsize=size)
@@ -79,20 +80,22 @@ for file in os.listdir(FOLDER_PATH):
 ax.set_xlim(xlim)
 ax.set_ylim(ylim)
 
-ax.set_xlabel("LSB")
+ax.set_xlabel("LSB", fontsize = 20)
 # secx = ax.secondary_xaxis('top')
 # secx.set_xticklabels(["{:.0f}".format(x/PE) for x in ax.get_xticks()])
 # secx.set_xlabel("Photons")
-ax.set_ylabel("Counts [Area Normalised]")
+ax.set_ylabel("Counts [Area Normalised]", fontsize = 20)
 ax.grid()
 
-ax.set_title("Characteristic Pulse Height Spectra for each ring", fontsize = 15)
 
-ax.legend()
 
-ax.legend()
+ax.set_title("Characteristic Pulse Height Spectra for each ring", fontsize = 20)
+
+ax.legend(fontsize = 20)
+
 fig.tight_layout()
 
 filename = "ring"
+
 plt.savefig(os.path.join(FOLDER_PATH,filename))
 plt.show() 
