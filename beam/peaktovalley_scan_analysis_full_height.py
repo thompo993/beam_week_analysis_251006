@@ -9,18 +9,19 @@ import personalpaths
 FOLDER_PATH = personalpaths.SCAN_PATH#r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
-VISUALISATION = "both" #options: "PE", "channel", "both"
+VISUALISATION = "PE" #options: "PE", "channel", "both"
 
 xlim = [0, 3000]
 ylim = [0, 600]
 size = [14,10]
 
-threshold = 150         
+threshold = 180         
 p_height = 150        
 p_to_v_diff = 100      
 window = 150    
 valley_window = 150
 perc = 0.2
+hwhm_ave =0.05
 SHOW_GAUSS = False
 
 def gaussian(x, A, mu, sigma):
@@ -111,7 +112,31 @@ def peak_to_valley(p,v):
     x = [p[0], v[0]]    
     y = [p[1], v[1]]
     plt.plot(x,y, color = "k", alpha = 0.25)
-    return pv_ratio,pv_distance
+    return pv_ratio
+
+def shoulder(peak, valley, data):
+    x = []
+    y = []
+    data = data[threshold:int(valley[0])]
+    half = peak[1]
+    for k in range(len(data)):
+        if data[k] < half*(1+hwhm_ave) and data[k] > half*(1-hwhm_ave):
+            x.append(k+threshold)
+            y.append(data[k])
+    plt.scatter(np.average(x), np.average(y), color = 'g')
+
+    return [np.average(x), np.average(y)]
+
+def HWHM_right(coordinates, data):
+    x = []
+    y = []
+    half = coordinates[1]/2
+    for k in range(int(coordinates[0]), len(data)):
+        if data[k] < half*(1+hwhm_ave) and data[k] > half*(1-hwhm_ave):
+            x.append(k)
+            y.append(data[k])
+    # plt.scatter(np.average(x), np.average(y), color = 'g')
+    return np.average(x)-coordinates[0]
 
 
 
@@ -127,11 +152,16 @@ def plot_PE(fold):
                 if  fold[-5:] != "PE_05" and fold[-5:] != "PE_10":
                     peak = findpeak(data)
                     valley = findvalley(data, peak[0], peak[1])
-                    peaktovalley,distance = peak_to_valley(peak, valley)
+                    peaktovalley = peak_to_valley(peak, valley)
+                    distance = shoulder(peak,valley, data)
+                    width = peak[0]-distance[0]
+
+                    hwhm = HWHM_right(peak,data) 
+
                     PtV = "{:.2f}".format(peaktovalley)
                     plt.plot(x, data, label = "ch%s - PtV: "%i + PtV)
                     
-                    f.write("\n"+fold[-2:]+",%s,%s,%s"%(i,peaktovalley,distance))
+                    f.write("\n"+fold[-2:]+",%s,%s,%s,%s"%(i,peaktovalley,width,hwhm))
 
                 else:
                     plt.plot(x, data, label = "ch%s"%i)
@@ -165,12 +195,15 @@ def plot_channels(num):
                     data = smooth_data(df)
                     peak = findpeak(data)
                     valley = findvalley(data, peak[0], peak[1])
-                    peaktovalley,distance = peak_to_valley(peak, valley)
+                    peaktovalley = peak_to_valley(peak, valley)
+                    hwhm = HWHM_right(peak,data)
+                    distance =1
+
                     PtV = "{:.2f}".format(peaktovalley)
 
                     plt.plot(x, data, label = folder[-5:] + " - PtV: " + PtV)
                     if VISUALISATION != "both":
-                        f.write("\n"+folder[-2:]+",%s,%s,%s"%(num,peaktovalley, distance))
+                        f.write("\n"+folder[-2:]+",%s,%s,%s,%s"%(i,peaktovalley,distance,hwhm))
 
 
     plt.title("CH_%s PE scan"%num, fontsize = 20)
@@ -192,7 +225,7 @@ def plot_channels(num):
 
 
 f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
-f.write("PE,channel,peaktovalleyratio")
+f.write("PE,channel,peaktovalleyratio, distance, RHHWHM")
 
 if VISUALISATION == "PE" or VISUALISATION == "both":
     for folder in os.walk(FOLDER_PATH):
@@ -204,4 +237,4 @@ if VISUALISATION == "channel" or VISUALISATION == "both":
     for i in range(8):
         plot_channels(i)
 
-f.close()
+# f.close()
