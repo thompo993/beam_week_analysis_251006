@@ -46,7 +46,7 @@ def plot_channels(num):
                 x = range(len(df))
                 #plot for each file
                 plt.plot(x, df, label = folder[-10:])
-    plt.title("Mismatched PE scan - Channel %s"%num + description, fontsize =20)
+    plt.title("Mismatched $\Delta$LSB/PE scan - Channel %s"%num + description, fontsize =20)
     plt.yscale(LOG)
     if LOG == 'linear':    
         plt.ylim(ylim)

@@ -13,7 +13,7 @@ plt.rcParams.update({'font.size': 20})
 
 FOLDER_PATH = personalpaths.FOLDER_PATH_BEAM_SOURCE_COMPARISON # if not using personalpaths file, use r"filepath"
 LOG = 'linear' #options: 'log', 'linear'
-channel = 5
+channel = 1
 PE = 25
 MODULE = "BB"
 

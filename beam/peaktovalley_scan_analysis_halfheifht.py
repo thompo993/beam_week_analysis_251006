@@ -118,7 +118,7 @@ def shoulder(peak, valley, data):
     x = []
     y = []
     data = data[threshold:int(valley[0])]
-    half = peak[1]
+    half = valley[1]+(peak[1]-valley[1])/2
     for k in range(len(data)):
         if data[k] < half*(1+hwhm_ave) and data[k] > half*(1-hwhm_ave):
             x.append(k+threshold)
@@ -224,7 +224,7 @@ def plot_channels(num):
 
 
 
-f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
+f = open(os.path.join(FOLDER_PATH, 'log_half.txt'), 'w')
 f.write("PE,channel,peaktovalleyratio, distance, RHHWHM")
 
 if VISUALISATION == "PE" or VISUALISATION == "both":

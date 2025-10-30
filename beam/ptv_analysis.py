@@ -6,7 +6,7 @@ plt.rcParams.update({'font.size': 20})
 
 
 PATH = personalpaths.PTVLOG_PATH
-data = np.loadtxt(os.path.join(PATH, "log.txt"), dtype = float, delimiter =",", skiprows =1)
+data = np.loadtxt(os.path.join(PATH, "log_half.txt"), dtype = float, delimiter =",", skiprows =1)
 
 
 pe = data[:,0]
@@ -22,9 +22,11 @@ plt.scatter(pe,ptv/width)
 plt.title("Figure of Merit")
 plt.ylabel("ptv/width")
 plt.xlabel("PE")
+plt.xlim(14, 55)
+
 plt.grid()
 plt.tight_layout()
-plt.savefig(os.path.join(PATH, "fig4"))
+plt.savefig(os.path.join(PATH, "fig4_half"))
 plt.show()
 
 # plt.figure(figsize = [14,10])
@@ -80,9 +82,10 @@ plt.errorbar(pe_plot,fom, yerr = sigma, elinewidth = 1, linewidth = 0, marker = 
 plt.title("Figure of Merit")
 plt.ylabel("ptv*width/hwhm")
 plt.xlabel("PE")
+plt.xlim(14, 55)
 plt.grid()
 # plt.legend()
 plt.tight_layout()
-plt.savefig(os.path.join(PATH, "fig2"))
+plt.savefig(os.path.join(PATH, "fig2_half"))
 plt.show()
 
