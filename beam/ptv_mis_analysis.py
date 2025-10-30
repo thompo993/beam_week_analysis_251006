@@ -26,7 +26,7 @@ plt.xlim(14, 55)
 
 plt.grid()
 plt.tight_layout()
-plt.savefig(os.path.join(PATH, "fig4_half"))
+plt.savefig(os.path.join(PATH, "fig4_mis"))
 plt.show()
 
 # plt.figure(figsize = [14,10])
@@ -86,6 +86,6 @@ plt.xlim(14, 55)
 plt.grid()
 # plt.legend()
 plt.tight_layout()
-plt.savefig(os.path.join(PATH, "fig2_half"))
+plt.savefig(os.path.join(PATH, "fig2_mis"))
 plt.show()
 
