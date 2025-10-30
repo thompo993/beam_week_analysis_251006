@@ -9,6 +9,7 @@ import personalpaths as personalpaths
 FOLDER_PATH = personalpaths.MISMATCHED_PATH#r"folderpath" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
+PE = 20
 description = "Module C, PBC A" #add what you want the title to say, if nothing leave a "" 
 if description != "":
     description = " - " + description
@@ -16,7 +17,7 @@ if description != "":
 xlim = [0, 3500]
 ylim = [0, 4] #choose appropriate limits, only applies to linear plots
 size = [14,10]
-rebinning = True
+rebinning = False
 
 def rebin(x,n): 
     rebin = []
@@ -45,8 +46,8 @@ def plot_channels(num):
                 df = df/norm
                 x = range(len(df))
                 #plot for each file
-                plt.plot(x, df, label = folder[-10:])
-    plt.title("Mismatched $\Delta$LSB/PE scan - Channel %s"%num + description, fontsize =20)
+                plt.plot(x, df, label = "Right $\Delta$LSB/PE = " + folder[-7:-5])
+    plt.title("Mismatched scan, Left $\Delta$LSB/PE = %s - Channel %s"%(PE,num) + description, fontsize =20)
     plt.yscale(LOG)
     if LOG == 'linear':    
         plt.ylim(ylim)

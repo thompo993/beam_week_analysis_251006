@@ -10,7 +10,7 @@ plt.rcParams.update({'font.size': 20})
 
 
 PATH = personalpaths.MISMATCHED_PATH
-rebinning = True
+rebinning = False
 
 def rebin(x):
     rebin = []
@@ -18,7 +18,7 @@ def rebin(x):
     tmp = np.append(zero, x)
     tmp = np.append(tmp,zero)
     for i in range(len(x)):
-        bin = np.average(tmp[i-8: i+8]) 
+        bin = np.average(tmp[i-8: i+8])
         rebin.append(bin)
     return rebin
 
@@ -38,9 +38,9 @@ def plot(a,b):
 
                     data = rebin(data)
 
-                plt.plot(data, label = file[-8:-6] + "  " + file[-6:-4])
-            
-    plt.title(title+ " comparison - Channel 0", fontsize = 20)
+                plt.plot(data, label = file[-8:-6] + " $\Delta$LSB/PE - " + file[-6:-4] + " $\Delta$LSB/PE")
+    title1  = "%s $\Delta$LSB/PE - %s $\Delta$LSB/PE" %(pe1,pe2)
+    plt.title(title1+ " comparison - Channel 0", fontsize = 20)
     plt.grid()
     # plt.ylim(0,4)
     plt.xlim(0,2500)
