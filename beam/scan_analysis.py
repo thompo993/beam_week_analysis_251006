@@ -5,14 +5,16 @@ import os
 from scipy.signal import savgol_filter
 from scipy.optimize import curve_fit
 import personalpaths
+plt.rcParams.update({'font.size': 20})
+
 
 FOLDER_PATH = personalpaths.SCAN_PATH#r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
-VISUALISATION = "PE" #options: "PE", "channel", "both"
+VISUALISATION = "both" #options: "PE", "channel", "both"
 
 xlim = [0, 3000]
-ylim = [0, 200]
+ylim = [0, 600]
 size = [14,10]
 
 def plot_PE(fold):
@@ -24,9 +26,9 @@ def plot_PE(fold):
                 df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
                 x = range(len(df))
                 plt.plot(x, df, label = "ch%s"%i)
-    plt.title(fold[-5:] + " channel comparison", fontsize = 20)
+    plt.title("Channel comparison, $\Delta$LSB/PE = " +fold[-2:], fontsize = 20)
     plt.xlabel("LSB")
-    plt.ylabel("Counts")
+    plt.ylabel("Counts") 
     plt.xlim(xlim)
     plt.yscale(LOG)
     plt.ylim(ylim)
@@ -46,8 +48,8 @@ def plot_channels(num):
                 file_path = os.path.join(folder, file)
                 df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
                 x = range(len(df))
-                plt.plot(x, df, label = folder[-5:])
-    plt.title("CH_%s PE scan"%num, fontsize = 20)
+                plt.plot(x, df, label = "$\Delta$LSB/PE = " + folder[-2:])
+    plt.title("CH_%s $\Delta$LSB/PE scan"%num, fontsize = 20)
     plt.xlabel("LSB")
     plt.ylabel("Counts")
     plt.yscale(LOG)

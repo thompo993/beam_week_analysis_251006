@@ -5,11 +5,13 @@ import os
 from scipy.signal import savgol_filter, find_peaks
 from scipy.optimize import curve_fit
 import personalpaths
+plt.rcParams.update({'font.size': 20})
+
 
 FOLDER_PATH = personalpaths.SCAN_PATH#r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
-VISUALISATION = "PE" #options: "PE", "channel", "both"
+VISUALISATION = "both" #options: "PE", "channel", "both"
 
 xlim = [0, 3000]
 ylim = [0, 600]
@@ -148,7 +150,7 @@ def plot_PE(fold):
                 file_path = os.path.join(fold, file)
                 df = np.loadtxt(file_path, dtype = float, delimiter=',')
                 x = range(len(df))                
-                data = smooth_data(df)
+                data = smooth_data(df) 
                 if  fold[-5:] != "PE_05" and fold[-5:] != "PE_10":
                     peak = findpeak(data)
                     valley = findvalley(data, peak[0], peak[1])
@@ -165,7 +167,7 @@ def plot_PE(fold):
 
                 else:
                     plt.plot(x, data, label = "ch%s"%i)
-    plt.title(fold[-5:] + " channel comparison", fontsize = 20)
+    plt.title("Channel comparison, $\Delta$LSB/PE = " +fold[-2:], fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
     plt.xlim(xlim)
@@ -201,12 +203,12 @@ def plot_channels(num):
 
                     PtV = "{:.2f}".format(peaktovalley)
 
-                    plt.plot(x, data, label = folder[-5:] + " - PtV: " + PtV)
+                    plt.plot(x, data, label ="$\Delta$LSB/PE = " + folder[-2:] + " - PtV: " + PtV)
                     if VISUALISATION != "both":
                         f.write("\n"+folder[-2:]+",%s,%s,%s,%s"%(i,peaktovalley,distance,hwhm))
 
 
-    plt.title("CH_%s PE scan"%num, fontsize = 20)
+    plt.title("CH_%s $\Delta$LSB/PE scan"%num, fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
     plt.yscale(LOG)

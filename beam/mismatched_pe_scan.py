@@ -25,7 +25,7 @@ def rebin(x,n):
 
     for k in range(2*n):
         tmp = np.append(tmp,0)
-
+ 
     for i in range(len(x)):
         bin = tmp[i-n:i+n]
         rebin.append(np.average(bin))

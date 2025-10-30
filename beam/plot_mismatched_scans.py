@@ -18,7 +18,7 @@ def rebin(x):
     tmp = np.append(zero, x)
     tmp = np.append(tmp,zero)
     for i in range(len(x)):
-        bin = np.average(tmp[i-8: i+8])
+        bin = np.average(tmp[i-8: i+8]) 
         rebin.append(bin)
     return rebin
 
