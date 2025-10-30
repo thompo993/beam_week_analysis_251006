@@ -6,7 +6,7 @@ plt.rcParams.update({'font.size': 20})
 
 
 PATH = personalpaths.PTVLOG_PATH
-data = np.loadtxt(os.path.join(PATH, "log.txt"), dtype = float, delimiter =",", skiprows =1)
+data = np.loadtxt(os.path.join(PATH, "mis_log.txt"), dtype = float, delimiter =",", skiprows =1)
 
 
 pe = data[:,0]
@@ -79,7 +79,7 @@ for i in range(len(pe_unique)):
     
 
 plt.errorbar(pe_plot,fom, yerr = sigma, elinewidth = 1, linewidth = 0, marker = 'o', capsize=5)
-plt.title("Figure of Merit")
+plt.title("Figure of Merit, mismatched (Left 30 $\Delta$LSB/PE)")
 plt.ylabel("ptv*width/hwhm")
 plt.xlabel("$\Delta$LSB/PE")
 plt.xlim(14, 55)
