@@ -206,13 +206,16 @@ def binned_average(BIN, norm = True):
             reader = SuperMUSRBinaryWave()
             reader.load_file(file_name)
             average_signal_bin, total_events_bin, missed_events_bin = process_events_incremental(
-            reader, max_events=max_events, amplitude_range=(z*bin_size, (z+1)*bin_size), prominence=100, pre_points=20, post_points=320, channel_index = channel)
+            reader, max_events=max_events, amplitude_range=(z*bin_size, (z+1)*bin_size), prominence=100, pre_points=20, post_points=50, channel_index = channel)
             if norm:
                 average_signal_bin = (average_signal_bin- min(average_signal_bin))/(max(average_signal_bin)-min(average_signal_bin))
                 average_signal_bin = average_signal_bin[xlim[0]:-xlim[1]]
             else: average_signal_bin = average_signal_bin
             if average_signal_bin is not None:
-                plt.plot(average_signal_bin, label="[%s, %s], %s waves, %s missed"%(z*bin_size, (z+1)*bin_size, total_events_bin, missed_events_bin))
+                tau, t_max, popt = calculate_tau(average_signal_bin, 20)
+                plt.plot(average_signal_bin, label="[%s, %s], %s waves, %s missed, tau = %s"%(z*bin_size, (z+1)*bin_size, total_events_bin, missed_events_bin, tau))
+
+
             reader.close_file()
         plt.title("Channel %s, number of bins: %s" %(channel, BIN))
         plt.xlabel('ns')
