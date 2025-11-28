@@ -15,14 +15,18 @@ import personalpaths as pp
 file_list = pp.btest_wavefiles(pp.folder_btest)
 current_date_time = datetime.today().strftime('%y%m%d_%H%M%S')
 
-BINNING = 8 #set a power of 2 or 0 if you don't want binning
+
 SAVE_CSV = False
-norm_binning = False  
 xlim = [None,100]
-save = "bins" #options: True, False, "expo", "bins"
+ylim = [0, 2000]
+save = True #options: True, False, "expo", "bins"
 show = False
 pileup_rejection = 1000
 size = [15, 10]
+channel_list = [0]
+yticks = np.arange(0,ylim[1],200)
+
+
 
 class SuperMUSRBinaryWave():
     def __init__(self):
@@ -194,156 +198,133 @@ def plot_exponential_fit_and_tau(signal, tau, t_max, popt):
     plt.clf()
     plt.close()
 
-def binned_average(BIN, norm = True):
-    if BIN > 2**12:
-            print("Bin number should be less than 2^12")
-    else:
-        bin_size = 2**12 / BIN
-        plt.figure(figsize=size)
-        for z in range(BIN):
-            print("Processing channel %s, bin %s" %(channel, z))
-            reader = SuperMUSRBinaryWave()
-            reader.load_file(file_name)
-            average_signal_bin, total_events_bin, missed_events_bin = process_events_incremental(
-            reader, max_events=max_events, amplitude_range=(z*bin_size, (z+1)*bin_size), prominence=100, pre_points=20, post_points=50, channel_index = channel)
-            if norm:
-                average_signal_bin = (average_signal_bin- min(average_signal_bin))/(max(average_signal_bin)-min(average_signal_bin))
-                average_signal_bin = average_signal_bin[xlim[0]:-xlim[1]]
-            else: average_signal_bin = average_signal_bin
-            if average_signal_bin is not None:
-                tau, t_max, popt = calculate_tau(average_signal_bin, 20)
-                plt.plot(average_signal_bin, label="[%s, %s], %s waves, %s missed, "%(z*bin_size, (z+1)*bin_size, total_events_bin, missed_events_bin)+ f"tau: {tau:.3f}")
-                f.write(str(tau)+"\n")
-        
-            reader.close_file()
-        plt.title("Channel %s, number of bins: %s" %(channel, BIN))
-        plt.xlabel('ns')
-        if norm:
-            plt.ylabel('normalised')
-        else:
-            plt.ylabel('LSB')
-        plt.legend()
-        plt.xlim(xlim)
-        plt.grid(True)
-        if save == True or save == "bins":
-            plt.savefig(os.path.join(SAVE_PATH, "ch%s_bins"%channel))    
-        if show:
-            plt.show()
-        plt.clf()
-        plt.close()
-
 # Usage
 if __name__ == "__main__":
+    SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',"comparison")
+
+    f = open(os.path.join(SAVE_PATH, 'log_range.txt'), 'w')
+
+    fig1 = plt.figure(figsize=[14,10])
+    ax1 = fig1.add_subplot(111)
+
     for file in file_list:
         print(file)
-        SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',  file[:-4])
         os.makedirs(SAVE_PATH, exist_ok=True)
 
 
-        f = open(os.path.join(SAVE_PATH, 'log.txt'), 'w')
         f.write("File name: " + file +"\n")
 
         file_name = os.path.join(pp.folder_btest,file)
-        for channel in range(8):
+        for channel in channel_list:
             reader = SuperMUSRBinaryWave()
             reader.load_file(file_name)
 
             max_events = 10000000000000000000 # maximum n of events 
 
-    
 
+                    # Processa i segnali aggiornando la media ad ogni evento
+            average_signal, total_events, missed_events = process_events_incremental(
+                reader,
+                max_events=max_events,
+                amplitude_range=(1000, 2500),
+                prominence=100,
+                pre_points=20,
+                post_points=320,
+                channel_index = channel
+            )
 
-            if BINNING > 0: 
-                binned_average(BINNING, norm_binning)
-            else:
+            reader.close_file()
 
-                        # Processa i segnali aggiornando la media ad ogni evento
-                average_signal, total_events, missed_events = process_events_incremental(
-                    reader,
-                    max_events=max_events,
-                    amplitude_range=(1200, 2200),
-                    prominence=100,
-                    pre_points=20,
-                    post_points=320,
-                    channel_index = channel
-                )
+            f.write("\n")
+            f.write("Channel %s\n"%channel)      
 
-                reader.close_file()
+            #shows average signal if at least one signal was analysed 
+            if average_signal is not None:
+                max_index = np.argmax(average_signal)
+                tau, t_max, popt = calculate_tau(average_signal, max_index)
+                x = np.arange(len(average_signal))
+                
+                fig2 = plt.figure()
+                ax2 = fig2.add_subplot(111)
+                
+                ax2.set_title("Channel %s - %s waves" %(channel, total_events))
+                ax2.plot(x, average_signal, label=f"Average signal, tau = {tau:.3f}  ")
+                ax2.set_xlabel('ns')
+                ax2.set_ylabel('LSB')
+                ax2.legend()
+                ax2.set_xlim(xlim)
+                ax2.set_ylim(ylim)
+                ax2.set_yticks(yticks)
+                ax2.grid(True)
+                fig2.tight_layout()
+                fig2.savefig(os.path.join(SAVE_PATH, file[:-4]+"ch%s"%channel))
+              
 
-                f.write("\n")
-                f.write("Channel %s\n"%channel)      
+                ax1.plot(x,average_signal, label=file[:-4]+ f", tau = {tau:.3f}  ")
 
-                #shows average signal if at least one signal was analysed 
-                if average_signal is not None:
-                    plt.figure()
-                    plt.title("Channel %s - %s waves" %(channel, total_events))
-                    plt.plot(average_signal, label="Average signal")
-                    plt.xlabel('ns')
-                    plt.ylabel('LSB')
-                    plt.legend()
-                    plt.xlim(xlim)
-                    plt.grid(True)
-                    if save == True:
-                        plt.savefig(os.path.join(SAVE_PATH, "ch%s"%channel))
-                    if show:
-                        plt.show()
-                    plt.clf()
-                    plt.close()
+                # calculate rising time with linear fit 
+                rise_time, (t_10, t_90), (x_rising, y_rising, slope, intercept) = calculate_rise_time_with_fit(average_signal)
+                # find the index of the peak (maximum)
 
+                # show exponential 
 
+                # save results to log
+                f.write(f"Total processed events: {total_events}\n")
+                if rise_time is not None:
+                    f.write(f"Rising Time (10-90%): {rise_time:.3f} points\n")
+                    f.write(f"t_10: {t_10:.3f}, t_90: {t_90:.3f}\n")
 
-                    # calculate rising time with linear fit 
-                    rise_time, (t_10, t_90), (x_rising, y_rising, slope, intercept) = calculate_rise_time_with_fit(average_signal)
-                    # find the index of the peak (maximum)
-                    max_index = np.argmax(average_signal)
+                #     # show linear fit for rising time
+                #     plt.figure()
+                #     plt.title("Channel %s - %s waves" %(channel, total_events))
+                #     plt.plot(average_signal, label="Rise Time: {:.3f}".format(rise_time))
+                #     plt.plot(x_rising, slope * x_rising + intercept, 'r--', label="Linear Fit (10-90%)")
+                #     plt.axvline(t_10, color='green', linestyle='--', label='t_10 (10%)')
+                #     plt.axvline(t_90, color='orange', linestyle='--', label='t_90 (90%)')
+                #     plt.xlabel('ns')
+                #     plt.ylabel('LSB')
+                #     plt.xlim(xlim)
+                #     plt.legend()
+                #     plt.grid(True)
+                #     if save == True: 
+                #         plt.savefig(os.path.join(SAVE_PATH, "ch%s_risetime"%channel))
+                #     if show:
+                #         plt.show()
+                #     plt.clf()
+                #     plt.close()
 
-                    # show exponential 
-                    tau, t_max, popt = calculate_tau(average_signal, max_index)
+                #     #save the average signal as CSV file
+                #     if SAVE_CSV:
+                #         np.savetxt(os.path.join(SAVE_PATH,"ch%s_averagesignal.csv"%channel), average_signal, delimiter=",")
 
-                    # save results to log
-                    f.write(f"Total processed events: {total_events}\n")
-                    if rise_time is not None:
-                        f.write(f"Rising Time (10-90%): {rise_time:.3f} points\n")
-                        f.write(f"t_10: {t_10:.3f}, t_90: {t_90:.3f}\n")
+                # else:
+                #     f.write("Rising time was not calculated.\n")
 
-                        # show linear fit for rising time
-                        plt.figure()
-                        plt.title("Channel %s - %s waves" %(channel, total_events))
-                        plt.plot(average_signal, label="Rise Time: {:.3f}".format(rise_time))
-                        plt.plot(x_rising, slope * x_rising + intercept, 'r--', label="Linear Fit (10-90%)")
-                        plt.axvline(t_10, color='green', linestyle='--', label='t_10 (10%)')
-                        plt.axvline(t_90, color='orange', linestyle='--', label='t_90 (90%)')
-                        plt.xlabel('ns')
-                        plt.ylabel('LSB')
-                        plt.xlim(xlim)
-                        plt.legend()
-                        plt.grid(True)
-                        if save == True: 
-                            plt.savefig(os.path.join(SAVE_PATH, "ch%s_risetime"%channel))
-                        if show:
-                            plt.show()
-                        plt.clf()
-                        plt.close()
+                # Modifica nella sezione di calcolo e visualizzazione di tau
+                if tau is not None:
+                    f.write(f"Tau: {tau:.3f} temporal unit\n")
 
-                        #save the average signal as CSV file
-                        if SAVE_CSV:
-                            np.savetxt(os.path.join(SAVE_PATH,"ch%s_averagesignal.csv"%channel), average_signal, delimiter=",")
-
-                    else:
-                        f.write("Rising time was not calculated.\n")
-
-                    # Modifica nella sezione di calcolo e visualizzazione di tau
-                    if tau is not None:
-                        f.write(f"Tau: {tau:.3f} temporal unit\n")
-
-                        plot_exponential_fit_and_tau(average_signal, tau, max_index, popt)
-
-                    else:
-                        f.write("Tau was not calculated\n")
+                    # plot_exponential_fit_and_tau(average_signal, tau, max_index, popt)
 
                 else:
-                    f.write("No average signal available\n")
-        
+                    f.write("Tau was not calculated\n")
 
-        f.close()
+            else:
+                f.write("No average signal available\n")
+    
+    ax1.set_title("Channel %s - %s waves" %(channel, total_events))
+    ax1.set_xlabel('ns')
+    ax1.set_ylabel('LSB')
+    ax1.legend()
+    ax1.set_xlim(xlim)
+    ax1.set_ylim(ylim)
+    ax1.grid(True)
+    ax1.set_yticks(yticks)
+    fig1.tight_layout()
+    fig1.savefig(os.path.join(SAVE_PATH, "unified"))
+              
 
+
+    f.close()
+
+    plt.show()
