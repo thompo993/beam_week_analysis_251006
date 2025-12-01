@@ -131,6 +131,6 @@ if __name__ == "__main__":
             # plt.show()
 
             data = np.c_[ counts, binscenters ]
-            np.savetxt(os.path.join(SAVE_PATH, 'hist_data'+file[:-4]+'.txt'), data, header = file[:-4], delimiter=",")
+            np.savetxt(os.path.join(SAVE_PATH, 'hist_data'+file[:-4]+'.csv'), data, header = file[:-4], delimiter=",")
 
             
