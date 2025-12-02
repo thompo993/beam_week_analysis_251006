@@ -1,15 +1,9 @@
 import numpy as np
-import csv
 import matplotlib.pyplot as plt
-from scipy import signal
-from scipy.signal import correlate, correlation_lags
-from scipy.signal import fftconvolve
-from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
-import math
-from scipy.stats import linregress
 import os
 from datetime import datetime
+import sys
 import personalpaths as pp
 
 file_list = pp.btest_wavefiles(pp.folder_btest)
@@ -18,14 +12,15 @@ current_date_time = datetime.today().strftime('%y%m%d_%H%M%S')
 
 SAVE_CSV = False
 xlim = [None,100]
-ylim = [0, 2200]
+ylim = [0, 2000]
 save = True #options: True, False, "expo", "bins"
 show = False
 pileup_rejection = 1000
 size = [15, 10]
-channel_list = [1]
+channel_list = [0]
 yticks = np.arange(0,ylim[1],200)
-
+hist_range = [70,110]
+bins = hist_range[1]-hist_range[0]
 
 
 class SuperMUSRBinaryWave():
@@ -61,37 +56,45 @@ class SuperMUSRBinaryWave():
 
 
 # function to process and update the average of exponential signals
-def process_events_incremental(reader, prominence=100, channel_index = 0, filename = "", save_path = "", wave_min=10):
-    waves = 0
-
+def process_events_incremental(reader, max_events=1000, prominence=100, pre_points=20, post_points=50, channel_index = 0):
+    PHS = []
+    event_count = 0
     while True:
         event = reader.get_event()
+        if event is None:
+            break
 
         y_data = event[channel_index]
-        peaks, _ = find_peaks(y_data, height =(1800, 2200), prominence=prominence)
-        print(peaks)
+        peaks, _ = find_peaks(y_data, prominence=prominence)
 
-        for i in range(len(peaks)):
-            plt.title(filename)
-            plt.ylim(ylim)
-            plt.grid()
-            plt.plot(y_data[peaks[i]-50:peaks[i]+100])
-            plt.tight_layout()
-            plt.savefig(os.path.join(save_path, filename[:-4]+"_%s.png"%waves))
-            plt.close()
-            waves += 1
+        try:
+            if len(peaks)>1:
+               PHS = np.append(PHS,y_data[peaks])
+        except KeyboardInterrupt:
+            sys.exit("KeyboardInterrupt")
+        except:
+            print("error")
+        
+        
+        if event_count%1000==0:
+            print(event_count)
+        event_count+=1
 
-        if waves>wave_min:
-            break
-    return 0
+
+    return PHS,event_count
+
 
 # Usage
 if __name__ == "__main__":
-    SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',"non_averaged")
+    SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',"PHS")
 
-    for file in file_list:
+
+    for file in file_list:    
+
         print(file)
         os.makedirs(SAVE_PATH, exist_ok=True)
+
+
 
         file_name = os.path.join(pp.folder_btest,file)
         for channel in channel_list:
@@ -100,11 +103,16 @@ if __name__ == "__main__":
 
             max_events = 10000000000000000000 # maximum n of events 
 
-            k = process_events_incremental(
+            PHS,events = process_events_incremental(
                 reader,
+                max_events=max_events,
                 prominence=20,
-                channel_index = channel,
-                filename = file, 
-                save_path = SAVE_PATH,
-                wave_min=10
+                pre_points=20,
+                post_points=320,
+                channel_index = channel
             )
+            PHS= np.array(PHS)
+
+            np.savetxt(os.path.join(SAVE_PATH, 'phs_data'+file[:-4]+'ch%s.csv'%channel), PHS, header = file[:-4] + "channel %s"%channel, delimiter=",")
+
+            

@@ -72,10 +72,11 @@ def process_events_incremental(reader, prominence=100, channel_index = 0, filena
         print(peaks)
 
         for i in range(len(peaks)):
+            plt.figure(figsize=[40,10])
             plt.title(filename)
             plt.ylim(ylim)
             plt.grid()
-            plt.plot(y_data[peaks[i]-50:peaks[i]+100])
+            plt.plot(y_data[peaks[i]-50:peaks[i]+3000])
             plt.tight_layout()
             plt.savefig(os.path.join(save_path, filename[:-4]+"_%s.png"%waves))
             plt.close()
@@ -87,7 +88,7 @@ def process_events_incremental(reader, prominence=100, channel_index = 0, filena
 
 # Usage
 if __name__ == "__main__":
-    SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',"non_averaged")
+    SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',"non_averaged_long_ch1")
 
     for file in file_list:
         print(file)
