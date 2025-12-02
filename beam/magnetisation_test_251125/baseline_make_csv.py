@@ -58,6 +58,7 @@ class SuperMUSRBinaryWave():
 # function to process and update the average of exponential signals
 def process_events_incremental(reader, max_events=1000, prominence=100, pre_points=20, post_points=50, channel_index = 0):
     counts = np.zeros(bins)
+    distances = []
     event_count = 0
     while True:
         event = reader.get_event()
@@ -75,6 +76,8 @@ def process_events_incremental(reader, max_events=1000, prominence=100, pre_poin
             if len(peaks)>1:
                 for i in range(len(peaks)-1):
                     dist.append(peaks[i+1]-peaks[i])
+                distances = np.append(distances, dist)
+
                 dist.append(len(y_data)-peaks[-1])
 
                 for k in range(len(peaks)):
@@ -94,7 +97,7 @@ def process_events_incremental(reader, max_events=1000, prominence=100, pre_poin
             print(event_count)
         event_count+=1
 
-    return counts, bin_edges
+    return counts, bin_edges, distances
 
 
 # Usage
@@ -116,7 +119,7 @@ if __name__ == "__main__":
 
             max_events = 10000000000000000000 # maximum n of events 
 
-            counts, bin_edges = process_events_incremental(
+            counts, bin_edges, distances = process_events_incremental(
                 reader,
                 max_events=max_events,
                 prominence=20,
@@ -132,5 +135,7 @@ if __name__ == "__main__":
 
             data = np.c_[ counts, binscenters ]
             np.savetxt(os.path.join(SAVE_PATH, 'hist_data'+file[:-4]+'.csv'), data, header = file[:-4], delimiter=",")
+
+            np.savetxt(os.path.join(SAVE_PATH, 'dist_data'+file[:-4]+'.csv'), distances, header = file[:-4], delimiter=",")
 
             

@@ -23,7 +23,7 @@ save = True #options: True, False, "expo", "bins"
 show = False
 pileup_rejection = 1000
 size = [15, 10]
-channel_list = [0]
+channel_list = [1]
 yticks = np.arange(0,ylim[1],200)
 
 
@@ -61,7 +61,7 @@ class SuperMUSRBinaryWave():
 
 
 # function to process and update the average of exponential signals
-def process_events_incremental(reader, max_events=1000, prominence=100, pre_points=20, post_points=50, channel_index = 0, filename = "", save_path = "", wave_min=10):
+def process_events_incremental(reader, prominence=100, channel_index = 0, filename = "", save_path = "", wave_min=10):
     waves = 0
 
     while True:
@@ -72,10 +72,12 @@ def process_events_incremental(reader, max_events=1000, prominence=100, pre_poin
         print(peaks)
 
         for i in range(len(peaks)):
+            plt.figure(figsize=[40,10])
             plt.title(filename)
             plt.ylim(ylim)
             plt.grid()
-            plt.plot(y_data[peaks[i]-50:peaks[i]+100])
+            plt.plot(y_data[peaks[i]-50:peaks[i]+3000])
+            plt.tight_layout()
             plt.savefig(os.path.join(save_path, filename[:-4]+"_%s.png"%waves))
             plt.close()
             waves += 1
@@ -86,7 +88,7 @@ def process_events_incremental(reader, max_events=1000, prominence=100, pre_poin
 
 # Usage
 if __name__ == "__main__":
-    SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',"non_averaged")
+    SAVE_PATH = os.path.join(pp.folder_btest,'save_figures',"non_averaged_long_ch1")
 
     for file in file_list:
         print(file)
@@ -101,10 +103,7 @@ if __name__ == "__main__":
 
             k = process_events_incremental(
                 reader,
-                max_events=max_events,
                 prominence=20,
-                pre_points=20,
-                post_points=320,
                 channel_index = channel,
                 filename = file, 
                 save_path = SAVE_PATH,
