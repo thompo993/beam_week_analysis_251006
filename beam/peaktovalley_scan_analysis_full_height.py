@@ -17,14 +17,14 @@ VISUALISATION = "both" #options: "PE", "channel", "both"
 
 channel_list =[0,1,2,3,4,5,6]
 
-xlim = [0, 3000]
+xlim = [0, 4095]
 ylim = [0, 600]
 size = [14,10]
 
-threshold = 200         
-p_height = 150        
-p_to_v_diff = 100      
-window = 150    
+threshold = 100         
+p_height = 40        
+p_to_v_diff = 50      
+window = 500    
 valley_window = 150
 perc = 0.2
 hwhm_ave =0.05
@@ -43,22 +43,24 @@ def smooth_data(y, window=70, poly=3):
     return savgol_filter(y, window_length=window, polyorder=poly)
 
 
-def findpeak(y):
+def findpeak(y, PE):
     x = np.arange(len(y))
 
     peaks,_ = find_peaks(y, height=40, width=50)
     if len(peaks)==0:       
-        guess =1500
+        guess = 1500
     elif len(peaks)>1:    guess = int(peaks[-1])
     elif len(peaks)==1:   guess = int(peaks[0])
     if guess < threshold:
-        guess = 450
+        if PE > 50:
+            guess = 600
+        else: guess = 450
     if guess > 2300:
-        guess = 2300
+        guess = 1500
     if guess > 1800:
         ran = 600
-    elif guess < 500:
-        ran = 100
+    elif guess < 800:
+        ran = 150
     else: ran = window
     if guess + ran -threshold < 200:
         x1 = x[threshold:threshold +400]
@@ -67,14 +69,14 @@ def findpeak(y):
     else:
         x1 = x[guess-ran:guess+ran]
         y1 = y[guess-ran:guess+ran]
-    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,200], maxfev = 10000000)
+    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,500], maxfev = 10000000)
 
     guess = int(popt[1])
     sigma = int(popt[2]*0.6)
     x = x[guess - sigma : guess + sigma]
     y = y[guess - sigma : guess + sigma]
 
-    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,popt[2]/100], maxfev = 10000000)
+    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,popt[2]], maxfev = 10000000)
 
    
     if SHOW_GAUSS:
@@ -114,7 +116,6 @@ def findvalley(y, m_peak, p_h):
 
 def peak_to_valley(p,v):
     pv_ratio = p[1]/v[1]
-    pv_distance = p[0]-v[0]
     x = [p[0], v[0]]    
     y = [p[1], v[1]]
     plt.plot(x,y, color = "k", alpha = 0.25)
@@ -152,17 +153,18 @@ def plot_PE(fold):
         for file in os.listdir(fold):
             if "%s.csv" %i in file and "amplitude" in file:
                 file_path = os.path.join(fold, file)
+                PE = int(fold[-3:])
                 df = np.loadtxt(file_path, dtype = float, delimiter=',')
                 x = range(len(df))                
                 data = smooth_data(df) 
                 try:
-                    peak = findpeak(data)
+                    peak = findpeak(data,PE)
                     valley = findvalley(data, peak[0], peak[1])
                     peaktovalley = peak_to_valley(peak, valley)
                     distance = shoulder(peak,valley, data)
                     width = peak[0]-distance[0]
 
-                    hwhm = 1#HWHM_right(peak,data) 
+                    hwhm = HWHM_right(peak,data) 
 
                     PtV = "{:.2f}".format(peaktovalley)
                     plt.plot(x, data, label = "ch%s - PtV: "%i + PtV)
@@ -192,26 +194,34 @@ def plot_PE(fold):
 def plot_channels(num):
     plt.figure(figsize=size)
     for folder in os.walk(FOLDER_PATH):
+
         folder = folder[0]
+        if "PE" in folder:
+            PE = int(folder[-3:])
+            for file in os.listdir(folder):
+                if "%s.csv"%num in file and "amplitude" in file:
+                    try:
+                        file_path = os.path.join(folder, file)
+                        df = np.loadtxt(file_path, dtype = float, delimiter=',')
+                        x = range(len(df))                
+                        data = smooth_data(df)
+                        peak = findpeak(data, PE)
+                        valley = findvalley(data, peak[0], peak[1])
+                        peaktovalley = peak_to_valley(peak, valley)
+                        hwhm = HWHM_right(peak,data)
+                        distance =1
 
-        for file in os.listdir(folder):
-            if  folder[-5:] != "PE_05" and folder[-5:] != "PE_10":
-                if "%s.csv"%num in file:
-                    file_path = os.path.join(folder, file)
-                    df = np.loadtxt(file_path, dtype = float, delimiter=',')
-                    x = range(len(df))                
-                    data = smooth_data(df)
-                    peak = findpeak(data)
-                    valley = findvalley(data, peak[0], peak[1])
-                    peaktovalley = peak_to_valley(peak, valley)
-                    hwhm = HWHM_right(peak,data)
-                    distance =1
+                        PtV = "{:.2f}".format(peaktovalley)
 
-                    PtV = "{:.2f}".format(peaktovalley)
+                        plt.plot(x, data, label ="\u0394LSB/PE = " + folder[-2:] + " - PtV: " + PtV)
+                        if VISUALISATION != "both":
+                            f.write("\n"+folder[-2:]+",%s,%s,%s,%s"%(i,peaktovalley,distance,hwhm))
 
-                    plt.plot(x, data, label ="\u0394LSB/PE = " + folder[-2:] + " - PtV: " + PtV)
-                    if VISUALISATION != "both":
-                        f.write("\n"+folder[-2:]+",%s,%s,%s,%s"%(i,peaktovalley,distance,hwhm))
+                    except KeyboardInterrupt:
+                        sys.exit()
+                    except: 
+                        print("Error calculating one of the parameters")
+                        plt.plot(x, data, label = "ch%s"%i)
 
 
     plt.title("CH_%s \u0394LSB/PE scan"%num, fontsize = 20)
@@ -232,11 +242,12 @@ def plot_channels(num):
 
 
 
-f = open(os.path.join(FOLDER_PATH, 'log.txt'), 'w')
+f = open(os.path.join(FOLDER_PATH,"figures",  'log_PTV.txt'), 'w')
 f.write("PE,channel,peaktovalleyratio, distance, RHHWHM")
 
 if VISUALISATION == "PE" or VISUALISATION == "both":
     for folder in os.walk(FOLDER_PATH):
+
         folder = folder[0]
         if "PE" in folder:
             plot_PE(folder)
