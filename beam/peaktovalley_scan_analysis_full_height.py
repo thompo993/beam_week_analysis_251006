@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
+import sys
 from scipy.signal import savgol_filter, find_peaks
 from scipy.optimize import curve_fit
 import personalpaths
@@ -9,22 +10,25 @@ plt.rcParams.update({'font.size': 20})
 
 
 FOLDER_PATH = personalpaths.SCAN_PATH#r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
+
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
 VISUALISATION = "both" #options: "PE", "channel", "both"
+
+channel_list =[0,1,2,3,4,5,6]
 
 xlim = [0, 3000]
 ylim = [0, 600]
 size = [14,10]
 
-threshold = 180         
+threshold = 200         
 p_height = 150        
 p_to_v_diff = 100      
 window = 150    
 valley_window = 150
 perc = 0.2
 hwhm_ave =0.05
-SHOW_GAUSS = False
+SHOW_GAUSS = True
 
 def gaussian(x, A, mu, sigma):
     return A * np.exp(-(x - mu)**2 / (2 * sigma**2))
@@ -63,7 +67,7 @@ def findpeak(y):
     else:
         x1 = x[guess-ran:guess+ran]
         y1 = y[guess-ran:guess+ran]
-    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,50], maxfev = 10000000)
+    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,200], maxfev = 10000000)
 
     guess = int(popt[1])
     sigma = int(popt[2]*0.6)
@@ -144,30 +148,32 @@ def HWHM_right(coordinates, data):
 
 def plot_PE(fold):
     plt.figure(figsize=size)
-    for i in range(8):
+    for i in channel_list:
         for file in os.listdir(fold):
-            if "%s.csv" %i in file:
+            if "%s.csv" %i in file and "amplitude" in file:
                 file_path = os.path.join(fold, file)
                 df = np.loadtxt(file_path, dtype = float, delimiter=',')
                 x = range(len(df))                
                 data = smooth_data(df) 
-                if  fold[-5:] != "PE_05" and fold[-5:] != "PE_10":
+                try:
                     peak = findpeak(data)
                     valley = findvalley(data, peak[0], peak[1])
                     peaktovalley = peak_to_valley(peak, valley)
                     distance = shoulder(peak,valley, data)
                     width = peak[0]-distance[0]
 
-                    hwhm = HWHM_right(peak,data) 
+                    hwhm = 1#HWHM_right(peak,data) 
 
                     PtV = "{:.2f}".format(peaktovalley)
                     plt.plot(x, data, label = "ch%s - PtV: "%i + PtV)
                     
-                    f.write("\n"+fold[-2:]+",%s,%s,%s,%s"%(i,peaktovalley,width,hwhm))
-
-                else:
+                    f.write("\n"+fold[-3:]+",%s,%s,%s,%s"%(i,peaktovalley,width,hwhm))
+                except KeyboardInterrupt:
+                    sys.exit()
+                except: 
+                    print("Error calculating one of the parameters")
                     plt.plot(x, data, label = "ch%s"%i)
-    plt.title("Channel comparison, $\Delta$LSB/PE = " +fold[-2:], fontsize = 20)
+    plt.title("Channel comparison, \u0394LSB/PE = " +fold[-3:], fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
     plt.xlim(xlim)
@@ -179,7 +185,7 @@ def plot_PE(fold):
     plt.legend(fontsize = 20)
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,fold[-5:]+LOG))
+        plt.savefig(os.path.join(FOLDER_PATH,"figures",fold[-5:]+LOG))
     plt.close()
     print(fold[-5:] + " channel comparison")
 
@@ -203,12 +209,12 @@ def plot_channels(num):
 
                     PtV = "{:.2f}".format(peaktovalley)
 
-                    plt.plot(x, data, label ="$\Delta$LSB/PE = " + folder[-2:] + " - PtV: " + PtV)
+                    plt.plot(x, data, label ="\u0394LSB/PE = " + folder[-2:] + " - PtV: " + PtV)
                     if VISUALISATION != "both":
                         f.write("\n"+folder[-2:]+",%s,%s,%s,%s"%(i,peaktovalley,distance,hwhm))
 
 
-    plt.title("CH_%s $\Delta$LSB/PE scan"%num, fontsize = 20)
+    plt.title("CH_%s \u0394LSB/PE scan"%num, fontsize = 20)
     plt.xlabel("LSB", fontsize = 20)
     plt.ylabel("Counts", fontsize = 20)
     plt.yscale(LOG)
@@ -220,7 +226,7 @@ def plot_channels(num):
     plt.tight_layout()
     plt.grid()
     if SAVE_PNG:
-        plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num+LOG))
+        plt.savefig(os.path.join(FOLDER_PATH,"figures","CH_%s"%num+LOG))
     plt.close() 
     print("CH_%s PE scan"%num)
 
@@ -236,7 +242,7 @@ if VISUALISATION == "PE" or VISUALISATION == "both":
             plot_PE(folder)
 
 if VISUALISATION == "channel" or VISUALISATION == "both":
-    for i in range(8):
+    for i in channel_list:
         plot_channels(i)
 
 # f.close()

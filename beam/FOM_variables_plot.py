@@ -7,6 +7,7 @@ from scipy.optimize import curve_fit
 import personalpaths
 
 PATH = personalpaths.FOM_PATH#r"path_goes_here" #folderpath goes here, ideally nothing else in the folder
+SAVE_PATH = os.path.join(PATH, "figures")
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
 VISUALISATION = "PE" #options: "PE", "channel", "both"
@@ -178,5 +179,5 @@ plt.ylim(ylim)
 plt.tight_layout()
 plt.legend(fontsize = 20)
 plt.grid()
-plt.savefig(r"\\isis\shares\DigitalMuons\supermusr_stavetesting_beam_week_251006\japan_conference_plots_251024\figure_of_merit\quantities.png")
+plt.savefig(os.path.join(SAVE_PATH, "foM.png"))
 plt.show()
