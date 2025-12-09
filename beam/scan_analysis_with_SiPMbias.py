@@ -101,7 +101,7 @@ def plot_PE(fold):
                     Rbias = PE_line(PE,Rslopech,Linterceptch)
 
 
-                    text += "ch%s"%i + ": LBIAS = {:.2f}, LVBR = {:.2f}, RBIAS = {:.2f}, RVBR = {:.2f}\n".format(Lbias, Linterceptch,Rbias,Rinterceptch)
+                    text += "ch%s"%i + ": LBIAS = {:.2f}, LVOV = {:.2f}, RBIAS = {:.2f}, RVOV = {:.2f}\n".format(Lbias, Lbias - Linterceptch,Rbias,Rbias - Rinterceptch)
                 except: 
                     print("Missing channel information for channel %s"%i)
     plt.suptitle("Channel comparison, \u0394LSB/PE = " +fold[-3:], fontsize = 20)
