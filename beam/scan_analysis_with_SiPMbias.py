@@ -16,8 +16,24 @@ os.makedirs(SAVE_PATH,exist_ok=True)
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
 VISUALISATION = "both" #options: "PE", "channel", "both"
+rebin_factor = 4
+
+props = dict(boxstyle='round', facecolor="white", alpha=0.60)
 
 
+def rebin(x, factor:int):
+    rebin = []
+    zero = np.zeros(factor)
+    tmp = np.append(zero, x)
+    tmp = np.append(tmp,zero)
+    for i in range(len(x)):
+        bin = np.average(tmp[i-factor: i+factor])
+        rebin.append(bin)
+    return rebin
+
+
+def PE_line(PE, slope, intercept):
+    return PE*slope +intercept
 
 for files in os.listdir(FOLDER_PATH):
     if "json" in files:
@@ -45,6 +61,13 @@ for i in range(16):
             Rintercept.append(sipm_info["sipm"][k]["hv_calibration"]["q"])
     except: print("missing %s" %i )
 
+Lindex = [int(x) for x in Lindex]
+Rindex = [int(x) for x in Rindex]
+
+Lslope = [float(x) for x in Lslope]
+Rslope = [float(x) for x in Rslope]
+Lintercept = [float(x) for x in Lintercept]
+Rintercept = [float(x) for x in Rintercept]
 
 
 print(Lslope)
@@ -61,13 +84,26 @@ def plot_PE(fold):
     for i in range(8):
         for file in os.listdir(fold):
             if "%s.csv" %i in file and "amplitude" in file:
-                PE = int(fold[-3:])
-                file_path = os.path.join(fold, file)
-                df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
-                x = range(len(df))
-                ax.plot(x, df, label = "ch%s"%i)
+                try:
+                    PE = int(fold[-3:])
+                    file_path = os.path.join(fold, file)
+                    df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
+                    x = range(len(df))
+                    df = rebin(df,rebin_factor)
+                    ax.plot(x, df, label = "ch%s"%i)
+                    
+                    Linterceptch = Lintercept[i]
+                    Rinterceptch = Rintercept[i]
+                    Lslopech = Lslope[i]
+                    Rslopech = Rslope[i]
 
-                text += "ch%s"%i + ": LBIAS = , LVBR = , RBIAS = , RVBR = \n"
+                    Lbias = PE_line(PE,Lslopech, Linterceptch)
+                    Rbias = PE_line(PE,Rslopech,Linterceptch)
+
+
+                    text += "ch%s"%i + ": LBIAS = {:.2f}, LVBR = {:.2f}, RBIAS = {:.2f}, RVBR = {:.2f}\n".format(Lbias, Linterceptch,Rbias,Rinterceptch)
+                except: 
+                    print("Missing channel information for channel %s"%i)
     plt.suptitle("Channel comparison, \u0394LSB/PE = " +fold[-3:], fontsize = 20)
     ax.set_xlabel("LSB")
     ax.set_ylabel("Counts") 
@@ -75,10 +111,11 @@ def plot_PE(fold):
     ax.set_yscale(LOG)
     ax.set_ylim(ylim)
     plt.tight_layout()
-    ax.legend()
+    ax.legend(fontsize =15)
     plt.grid()
 
-    ax.text(0.98, 0.95, text[:-1], transform=ax.transAxes, fontsize=15, verticalalignment='top', horizontalalignment='right')
+
+    ax.text(0.98, 0.95, text[:-1], transform=ax.transAxes, fontsize=15, verticalalignment='top', horizontalalignment='right',bbox = props)
 
     if SAVE_PNG:
         plt.savefig(os.path.join(SAVE_PATH,fold[-5:]+LOG))
@@ -86,24 +123,50 @@ def plot_PE(fold):
     plt.close()
 
 def plot_channels(num):
-    plt.figure(figsize=size)
+    fig =plt.figure(figsize=size)
+    ax = fig.add_subplot()
+    text =""
     for folder in os.walk(FOLDER_PATH):
         folder = folder[0]
         for file in os.listdir(folder):
             if "%s.csv"%num in file and "amplitude" in file:
-                file_path = os.path.join(folder, file)
-                df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
-                x = range(len(df))
-                plt.plot(x, df, label = "\u0394LSB/PE = " + folder[-3:])
-    plt.title("CH_%s \u0394LSB/PE scan"%num, fontsize = 20)
-    plt.xlabel("LSB")
-    plt.ylabel("Counts")
-    plt.yscale(LOG)
-    plt.xlim(xlim)
-    plt.ylim(ylim)
-    plt.legend()
+                try:
+                    PE = int(folder[-3:])
+
+                    file_path = os.path.join(folder, file)
+                    df = pd.read_csv(file_path, on_bad_lines='skip', na_values=['No data', 'NaN', '', ' ', '  ', "m", "4magnesium"], skipinitialspace=True)
+                    x = range(len(df))
+                    df = rebin(df,rebin_factor)
+
+                    ax.plot(x, df, label = "\u0394LSB/PE = " + folder[-3:])
+
+
+                    Linterceptch = Lintercept[i]
+                    Rinterceptch = Rintercept[i]
+                    Lslopech = Lslope[i]
+                    Rslopech = Rslope[i]
+
+                    Lbias = PE_line(PE,Lslopech, Linterceptch)
+                    Rbias = PE_line(PE,Rslopech,Linterceptch)
+
+
+                    text += "ch%s"%i + ": LBIAS = {:.2f}, LVBR = {:.2f}, RBIAS = {:.2f}, RVBR = {:.2f}\n".format(Lbias, Linterceptch,Rbias,Rinterceptch)
+
+
+                except:
+                    print("missing information")
+    plt.suptitle("CH_%s \u0394LSB/PE scan"%num, fontsize = 20)
+    ax.set_xlabel("LSB")
+    ax.set_ylabel("Counts") 
+    ax.set_xlim(xlim)
+    ax.set_yscale(LOG)
+    ax.set_ylim(ylim)
     plt.tight_layout()
+    ax.legend(fontsize = 15)
     plt.grid()
+
+    ax.text(0.02, 0.95, text[:-1], transform=ax.transAxes, fontsize=15, verticalalignment='top', horizontalalignment='left',bbox = props)
+
     if SAVE_PNG:
         plt.savefig(os.path.join(SAVE_PATH,"CH_%s"%num+LOG))
     plt.close() 
