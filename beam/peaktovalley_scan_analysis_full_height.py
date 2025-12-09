@@ -28,7 +28,7 @@ window = 500
 valley_window = 150
 perc = 0.2
 hwhm_ave =0.05
-SHOW_GAUSS = True
+SHOW_GAUSS = False
 
 def gaussian(x, A, mu, sigma):
     return A * np.exp(-(x - mu)**2 / (2 * sigma**2))
@@ -45,18 +45,24 @@ def smooth_data(y, window=70, poly=3):
 
 def findpeak(y, PE):
     x = np.arange(len(y))
+    
+    if PE <40:
+        height = p_height
+        guess = PE*16
 
-    peaks,_ = find_peaks(y, height=40, width=50)
-    if len(peaks)==0:       
-        guess = 1500
-    elif len(peaks)>1:    guess = int(peaks[-1])
-    elif len(peaks)==1:   guess = int(peaks[0])
+    elif PE < 80:
+        height = p_height/2
+        guess = PE*20
+
+    else: 
+        guess = PE*25
+        height = p_height/4
     if guess < threshold:
+        if PE > 70:
+            guess = 1500
         if PE > 50:
             guess = 600
         else: guess = 450
-    if guess > 2300:
-        guess = 1500
     if guess > 1800:
         ran = 600
     elif guess < 800:
@@ -69,14 +75,14 @@ def findpeak(y, PE):
     else:
         x1 = x[guess-ran:guess+ran]
         y1 = y[guess-ran:guess+ran]
-    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,500], maxfev = 10000000)
+    popt, _ = curve_fit(gaussian,x1,y1,p0 = [height, guess,500], maxfev = 10000000)
 
     guess = int(popt[1])
     sigma = int(popt[2]*0.6)
     x = x[guess - sigma : guess + sigma]
     y = y[guess - sigma : guess + sigma]
 
-    popt, _ = curve_fit(gaussian,x1,y1,p0 = [p_height, guess,popt[2]], maxfev = 10000000)
+    popt, _ = curve_fit(gaussian,x1,y1,p0 = [height, guess,popt[2]], maxfev = 10000000)
 
    
     if SHOW_GAUSS:
@@ -152,12 +158,12 @@ def plot_PE(fold):
     for i in channel_list:
         for file in os.listdir(fold):
             if "%s.csv" %i in file and "amplitude" in file:
-                file_path = os.path.join(fold, file)
-                PE = int(fold[-3:])
-                df = np.loadtxt(file_path, dtype = float, delimiter=',')
-                x = range(len(df))                
-                data = smooth_data(df) 
-                try:
+                try:    
+                    file_path = os.path.join(fold, file)
+                    PE = int(fold[-3:])
+                    df = np.loadtxt(file_path, dtype = float, delimiter=',')
+                    x = range(len(df))                
+                    data = smooth_data(df) 
                     peak = findpeak(data,PE)
                     valley = findvalley(data, peak[0], peak[1])
                     peaktovalley = peak_to_valley(peak, valley)
