@@ -8,6 +8,9 @@ plt.rcParams.update({'font.size': 20})
 PATH = personalpaths.PTVLOG_PATH
 data = np.loadtxt(os.path.join(PATH, "mis_log.txt"), dtype = float, delimiter =",", skiprows =1)
 
+print(data)
+data = data[~np.isnan(data).any(axis=1)]
+print(data)
 
 pe = data[:,0]
 channel = data[:,1]
@@ -21,8 +24,10 @@ plt.figure(figsize = [14,10])
 plt.scatter(pe,ptv/width)
 plt.title("Figure of Merit")
 plt.ylabel("ptv/width")
-plt.xlabel("$\Delta$LSB/PE")
-plt.xlim(14, 55)
+plt.xlabel("\u0394LSB/PE")
+plt.xlim(0, 150)
+plt.ylim(0, 0.008)
+
 
 plt.grid()
 plt.tight_layout()
@@ -77,12 +82,13 @@ for i in range(len(pe_unique)):
     fom.append(np.average(x))
     sigma.append(np.std(x))
     
+print(fom)
 
 plt.errorbar(pe_plot,fom, yerr = sigma, elinewidth = 1, linewidth = 0, marker = 'o', capsize=5)
-plt.title("Figure of Merit, mismatched (Left 30 $\Delta$LSB/PE)")
+plt.title("Figure of Merit, mismatched (Left 30 \u0394LSB/PE)")
 plt.ylabel("ptv*width/hwhm")
-plt.xlabel("$\Delta$LSB/PE")
-plt.xlim(14, 55)
+plt.xlabel("\u0394LSB/PE")
+plt.xlim(0, 150)
 plt.grid()
 # plt.legend()
 plt.tight_layout()

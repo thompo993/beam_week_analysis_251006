@@ -9,8 +9,8 @@ import personalpaths as personalpaths
 FOLDER_PATH = personalpaths.MISMATCHED_PATH#r"folderpath" #folderpath goes here, ideally nothing else in the folder
 SAVE_PNG = True
 LOG = 'linear' #options: 'log', 'linear'
-PE = 30
-description = "Module B, PBC B" #add what you want the title to say, if nothing leave a "" 
+PE = 70
+description = "Module C, ID 19757" #add what you want the title to say, if nothing leave a "" 
 if description != "":
     description = " - " + description
 
@@ -18,15 +18,29 @@ xlim = [0, 3500]
 ylim = [0, 4] #choose appropriate limits, only applies to linear plots
 size = [14,10]
 
+SAVE_PATH = os.path.join(FOLDER_PATH,"figures", "ptv_analysis")
+os.makedirs(SAVE_PATH, exist_ok=True)
 
-threshold = 180         
-p_height = 0.2       
-p_to_v_diff = 0.3      
-window = 150    
-valley_window = 150
+
+threshold = 300         
+p_height = 0.1       
+p_to_v_diff = 0.2      
+window = 400    
+valley_window = 400
 perc = 0.2
 hwhm_ave =0.05
-SHOW_GAUSS = True
+SHOW_GAUSS = False
+
+
+
+# threshold = 180         
+# p_height = 0.2       
+# p_to_v_diff = 0.3      
+# window = 150    
+# valley_window = 150
+# perc = 0.2
+# hwhm_ave =0.05
+# SHOW_GAUSS = True
 
 def gaussian(x, A, mu, sigma):
     return A * np.exp(-(x - mu)**2 / (2 * sigma**2))
@@ -78,8 +92,6 @@ def findpeak(y):
     if SHOW_GAUSS:
         plt.plot(x, gaussian(x,*popt))
     plt.scatter(popt[1], gaussian(popt[1],*popt), color = "k")
-
-    print(popt[1])
 
     return [popt[1], gaussian(popt[1],*popt)]
 
@@ -151,7 +163,7 @@ def HWHM_right(coordinates, data):
     return np.average(x)-coordinates[0]
 
 
-f = open(os.path.join(FOLDER_PATH,"mis_log.txt"), "w")
+f = open(os.path.join(SAVE_PATH,"mis_log.txt"), "w")
 
 
 
@@ -160,26 +172,27 @@ def plot_channels(num):
     for folder in os.walk(FOLDER_PATH): #looks into all folders 
         folder = folder[0]
         for file in os.listdir(folder):
-            if "%s.csv"%num in file:
+            if "%s.csv"%num in file and "amplitude" in file:
                 file_path = os.path.join(folder, file)
                 df = np.loadtxt(file_path, dtype = float,delimiter=',')
                 norm = np.sum(np.array(df))/1000
                 df = smooth_data(df, 8)
                 data = df/norm
                 x = range(len(data))
+                PtV = "0"                    
+                try:
+                    peak = findpeak(data)
+                    valley = findvalley(data, peak[0], peak[1])
+                    peaktovalley = peak_to_valley(peak, valley)
+                    distance = shoulder(peak,valley, data)
+                    width = peak[0]-distance[0]
+                    hwhm = HWHM_right(peak,data) 
 
-
-                peak = findpeak(data)
-                valley = findvalley(data, peak[0], peak[1])
-                peaktovalley = peak_to_valley(peak, valley)
-                distance = shoulder(peak,valley, data)
-                width = peak[0]-distance[0]
-                hwhm = HWHM_right(peak,data) 
-
-                PtV = "{:.2f}".format(peaktovalley)                    
-                f.write("\n"+ folder[-7:-5]+",%s,%s,%s,%s"%(i,peaktovalley,width,hwhm))
-                plt.plot(x, data, label = "Right $\Delta$LSB/PE = " + folder[-7:-5] + " Ptv = "+PtV)
-    plt.title("Mismatched scan, Left $\Delta$LSB/PE = %s - Channel %s"%(PE,num) + description, fontsize =20)
+                    PtV = "{:.2f}".format(peaktovalley)                    
+                    f.write("\n"+  folder[-3:]+",%s,%s,%s,%s"%(i,peaktovalley,width,hwhm))
+                except: print("no")
+                plt.plot(x, data, label = "Left \u0394LSB/PE = " + folder[-3:] + " Ptv = "+PtV, linewidth = 0.5)
+    plt.title("Mismatched scan, Right \u0394LSB/PE = %s - Channel %s"%(PE,num) + description, fontsize =20)
     plt.yscale(LOG)
     if LOG == 'linear':    
         plt.ylim(ylim)
@@ -188,7 +201,7 @@ def plot_channels(num):
     plt.ylabel("Counts [Area Normalised]", fontsize =20)
     plt.rc('xtick', labelsize=20)    # fontsize of the tick labels
     plt.rc('ytick', labelsize=20)
-    leg = plt.legend(fontsize =20)
+    leg = plt.legend(fontsize =10)
 
     for legobj in leg.legend_handles: #increase size of lines in legend to show colors better
         legobj.set_linewidth(4.0)
@@ -196,10 +209,10 @@ def plot_channels(num):
     plt.tight_layout()
     plt.grid()
     if SAVE_PNG:#if true save, if false show
-        plt.savefig(os.path.join(FOLDER_PATH,"CH_%s"%num+LOG))
+        plt.savefig(os.path.join(SAVE_PATH,"CH_%s"%num+LOG))
         plt.close()
     else: plt.show() 
-    print("Mismatched scan, Left $\Delta$LSB/PE = %s - Channel %s"%(PE,num) + description)
+    print("Mismatched scan, Left \u0394LSB/PE = %s - Channel %s"%(PE,num) + description)
 
 
 

@@ -38,7 +38,7 @@ legend_elements = [Line2D([0], [0], color=col[0], lw=4, label=lab[0]),
 plt.title("Linear fit of gain profile",fontsize =20)
 plt.xlim(0,None)
 plt.legend(handles=legend_elements)
-plt.xlabel("$\Delta$LSB per photo-electron")
+plt.xlabel("\u0394LSB per photo-electron")
 plt.ylabel("Bias voltage [V]")
 plt.grid()
 plt.tight_layout()
@@ -71,7 +71,7 @@ legend_elements = [Line2D([0], [0], color=col[0], lw=4, label=labz[0]),
 # Create the figure
 plt.title("Linear fit of gain profile (zoomed in)", fontsize = 20)
 plt.legend(handles=legend_elements)
-plt.xlabel("$\Delta$LSB per photo-electron")
+plt.xlabel("\u0394LSB per photo-electron")
 plt.ylabel("Bias voltage [V]")
 plt.grid()
 plt.tight_layout()

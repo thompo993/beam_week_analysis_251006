@@ -38,8 +38,8 @@ def plot(a,b):
 
                     data = rebin(data)
 
-                plt.plot(data, label = file[-8:-6] + " $\Delta$LSB/PE - " + file[-6:-4] + " $\Delta$LSB/PE")
-    title1  = "%s $\Delta$LSB/PE - %s $\Delta$LSB/PE" %(pe1,pe2)
+                plt.plot(data, label = file[-8:-6] + " \u0394LSB/PE - " + file[-6:-4] + " \u0394LSB/PE")
+    title1  = "%s \u0394LSB/PE - %s \u0394LSB/PE" %(pe1,pe2)
     plt.title(title1+ " comparison - Channel 0", fontsize = 20)
     plt.grid()
     # plt.ylim(0,4)
